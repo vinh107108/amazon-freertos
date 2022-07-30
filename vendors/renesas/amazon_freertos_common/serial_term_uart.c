@@ -44,49 +44,49 @@ Includes   <System Includes> , "Project Includes"
 /*******************************************************************************
  Macro definitions
  *******************************************************************************/
-#if !defined(MY_BSP_CFG_SERIAL_TERM_SCI)
-#error "Error! Need to define MY_BSP_CFG_SERIAL_TERM_SCI in r_bsp_config.h"
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (0)
+#if !defined(BSP_CFG_SCI_UART_TERMINAL_ENABLE)
+#error "Error! Need to define BSP_CFG_SCI_UART_TERMINAL_ENABLE in r_bsp_config.h"
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (0)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI0()
 #define SCI_CH_serial_term          SCI_CH0
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (1)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (1)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI1()
 #define SCI_CH_serial_term          SCI_CH1
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (2)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (2)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI2()
 #define SCI_CH_serial_term          SCI_CH2
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (3)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (3)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI3()
 #define SCI_CH_serial_term          SCI_CH3
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (4)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (4)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI4()
 #define SCI_CH_serial_term          SCI_CH4
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (5)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (5)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI5()
 #define SCI_CH_serial_term          SCI_CH5
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (6)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (6)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI6()
 #define SCI_CH_serial_term          SCI_CH6
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (7)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (7)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI7()
 #define SCI_CH_serial_term          SCI_CH7
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (8)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (8)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI8()
 #define SCI_CH_serial_term          SCI_CH8
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (9)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (9)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI9()
 #define SCI_CH_serial_term          SCI_CH9
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (10)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (10)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI10()
 #define SCI_CH_serial_term          SCI_CH10
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (11)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (11)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI11()
 #define SCI_CH_serial_term          SCI_CH11
-#elif MY_BSP_CFG_SERIAL_TERM_SCI == (12)
+#elif BSP_CFG_SCI_UART_TERMINAL_CHANNEL == (12)
 #define R_SCI_PinSet_serial_term()  R_SCI_PinSet_SCI12()
 #define SCI_CH_serial_term          SCI_CH12
 #else
-#error "Error! Invalid setting for MY_BSP_CFG_SERIAL_TERM_SCI in r_bsp_config.h"
+#error "Error! Invalid setting for BSP_CFG_SCI_UART_TERMINAL_CHANNEL in r_bsp_config.h"
 #endif
 
 /*******************************************************************************
@@ -122,13 +122,13 @@ void uart_config(void)
     R_SCI_PinSet_serial_term();
 
     /* Set up the configuration data structure for asynchronous (UART) operation. */
-    my_sci_config.async.baud_rate    = 115200;
+    my_sci_config.async.baud_rate    = BSP_CFG_SCI_UART_TERMINAL_BITRATE;
     my_sci_config.async.clk_src      = SCI_CLK_INT;
     my_sci_config.async.data_size    = SCI_DATA_8BIT;
     my_sci_config.async.parity_en    = SCI_PARITY_OFF;
     my_sci_config.async.parity_type  = SCI_EVEN_PARITY;
     my_sci_config.async.stop_bits    = SCI_STOPBITS_1;
-    my_sci_config.async.int_priority = 3;    // 1=lowest, 15=highest
+    my_sci_config.async.int_priority = BSP_CFG_SCI_UART_TERMINAL_INTERRUPT_PRIORITY;    // 1=lowest, 15=highest
 
     /* OPEN ASYNC CHANNEL
     *  Provide address of the configure structure,
