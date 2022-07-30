@@ -242,7 +242,7 @@ static PACKET_BLOCK_FOR_QUEUE packet_block_for_queue1;
 static PACKET_BLOCK_FOR_QUEUE packet_block_for_queue2;
 static FIRMWARE_UPDATE_CONTROL_BLOCK * firmware_update_control_block_bank0 = ( FIRMWARE_UPDATE_CONTROL_BLOCK * ) BOOT_LOADER_UPDATE_EXECUTE_AREA_LOW_ADDRESS;
 static volatile uint32_t gs_header_flashing_task;
-
+extern xSemaphoreHandle xSemaphoreFlashAccess;
 /*-----------------------------------------------------------*/
 
 OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const pFileContext )
@@ -265,42 +265,33 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const pFileContext )
             xSemaphoreGive( xSemaphoreWriteBlock );
             fragmented_flash_block_list = NULL;
 
-            R_FLASH_Close();
+            xSemaphoreTake(xSemaphoreFlashAccess, portMAX_DELAY);
 
-            if( R_FLASH_Open() == FLASH_SUCCESS )
-            {
-                cb_func_info.pcallback = ota_header_flashing_callback;
-                cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
-                R_FLASH_Control( FLASH_CMD_SET_BGO_CALLBACK, ( void * ) &cb_func_info );
-                gs_header_flashing_task = OTA_FLASHING_IN_PROGRESS;
 
-                if( R_FLASH_Erase( ( flash_block_address_t ) BOOT_LOADER_UPDATE_TEMPORARY_AREA_HIGH_ADDRESS, BOOT_LOADER_UPDATE_TARGET_BLOCK_NUMBER ) != FLASH_SUCCESS )
-                {
-                    eResult = OtaPalRxFileCreateFailed;
-                    LogError( ( "Failed to erase the flash: R_FLASH_Erase() returns error." ) );
-                }
+			cb_func_info.pcallback = ota_header_flashing_callback;
+			cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
+			R_FLASH_Control( FLASH_CMD_SET_BGO_CALLBACK, ( void * ) &cb_func_info );
+			gs_header_flashing_task = OTA_FLASHING_IN_PROGRESS;
 
-                while( OTA_FLASHING_IN_PROGRESS == gs_header_flashing_task )
-                {
-                }
+			if( R_FLASH_Erase( ( flash_block_address_t ) BOOT_LOADER_UPDATE_TEMPORARY_AREA_HIGH_ADDRESS, BOOT_LOADER_UPDATE_TARGET_BLOCK_NUMBER ) != FLASH_SUCCESS )
+			{
+				eResult = OtaPalRxFileCreateFailed;
+				LogError( ( "Failed to erase the flash: R_FLASH_Erase() returns error." ) );
+			}
 
-                R_FLASH_Close();
-                R_FLASH_Open();
-                cb_func_info.pcallback = ota_flashing_callback;
-                cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
-                R_FLASH_Control( FLASH_CMD_SET_BGO_CALLBACK, ( void * ) &cb_func_info );
-                load_firmware_control_block.OtaFileContext = pFileContext;
-                load_firmware_control_block.total_image_length = 0;
-                load_firmware_control_block.eSavedAgentState = OtaImageStateUnknown;
-                LogInfo( ( "Receive file created." ) );
-                pFileContext->pFile = ( uint8_t * ) &load_firmware_control_block;
-                eResult = OtaPalSuccess;
-            }
-            else
-            {
-                eResult = OtaPalRxFileCreateFailed;
-                LogError( ( "Failed to create a file: R_FLASH_Open() returns error." ) );
-            }
+			while( OTA_FLASHING_IN_PROGRESS == gs_header_flashing_task )
+			{
+			}
+			cb_func_info.pcallback = ota_flashing_callback;
+			cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
+			R_FLASH_Control( FLASH_CMD_SET_BGO_CALLBACK, ( void * ) &cb_func_info );
+			load_firmware_control_block.OtaFileContext = pFileContext;
+			load_firmware_control_block.total_image_length = 0;
+			load_firmware_control_block.eSavedAgentState = OtaImageStateUnknown;
+			LogInfo( ( "Receive file created." ) );
+			pFileContext->pFile = ( uint8_t * ) &load_firmware_control_block;
+			eResult = OtaPalSuccess;
+
         }
         else
         {
@@ -313,7 +304,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const pFileContext )
         eResult = OtaPalRxFileCreateFailed;
         LogError( ( "Failed to create a file: Invalid file context provided." ) );
     }
-
+    xSemaphoreGive(xSemaphoreFlashAccess);
     return OTA_PAL_COMBINE_ERR( eResult, 0 );
 }
 /*-----------------------------------------------------------*/
@@ -355,8 +346,6 @@ OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const pFileContext )
             vSemaphoreDelete( xSemaphoreWriteBlock );
             xSemaphoreWriteBlock = NULL;
         }
-
-        R_FLASH_Close();
     }
 
     ota_context_close( pFileContext );
@@ -516,8 +505,6 @@ OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const pFileContext )
             vSemaphoreDelete( xSemaphoreWriteBlock );
             xSemaphoreWriteBlock = NULL;
         }
-
-        R_FLASH_Close();
     }
     else
     {
@@ -553,8 +540,6 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const pFileC
             memcpy( &assembled_flash_buffer[ tmp->content.offset ], tmp->content.binary, tmp->content.length );
             /* Flashing memory. */
             xSemaphoreTake( xSemaphoreFlashig, portMAX_DELAY );
-            R_FLASH_Close();
-            R_FLASH_Open();
             cb_func_info.pcallback = ota_header_flashing_callback;
             cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
             R_FLASH_Control( FLASH_CMD_SET_BGO_CALLBACK, ( void * ) &cb_func_info );
@@ -577,6 +562,7 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const pFileC
         while( tmp != NULL );
     }
 
+    vTaskDelay(500);
     /* Verify an ECDSA-SHA256 signature. */
     if( CRYPTO_SignatureVerificationStart( &pvSigVerifyContext, cryptoASYMMETRIC_ALGORITHM_ECDSA,
                                            cryptoHASH_ALGORITHM_SHA256 ) == pdFALSE )
@@ -671,34 +657,28 @@ OtaPalStatus_t otaPal_ResetDevice( OtaFileContext_t * const pFileContext )
     ( void ) pFileContext;
 
     LogInfo( ( "Resetting the device." ) );
+    vTaskDelay(500);
 
-    if( ( OtaImageStateAccepted == load_firmware_control_block.eSavedAgentState ) ||
-        ( OtaImageStateTesting == load_firmware_control_block.eSavedAgentState ) )
-    {
-        /* Software reset issued (Not swap bank) */
-        set_psw( 0 );
-        R_BSP_InterruptsDisable();
-        R_BSP_RegisterProtectDisable( BSP_REG_PROTECT_LPC_CGC_SWR );
-        SYSTEM.SWRR = 0xa501;
 
-        while( 1 ) /* software reset */
-        {
-        }
-    }
-    else
-    {
-        /* If the status is rejected, aborted, or error, swap bank and return to the previous image.
-         * Then the boot loader will start and erase the image that failed to update. */
-        set_psw( 0 );
-        R_BSP_InterruptsDisable();
-        R_FLASH_Control( FLASH_CMD_BANK_TOGGLE, NULL );
-        R_BSP_RegisterProtectDisable( BSP_REG_PROTECT_LPC_CGC_SWR );
-        SYSTEM.SWRR = 0xa501;
+		/* If the status is rejected, aborted, or error, swap bank and return to the previous image.
+		   Then the boot loader will start and erase the image that failed to update. */
+    WDT.WDTCR.BIT.TOPS = 0;
+	WDT.WDTCR.BIT.CKS  = 1;
+	WDT.WDTCR.BIT.RPES = 3;
+	WDT.WDTCR.BIT.RPSS = 3;
+	//WDT Status Register
+	WDT.WDTSR.BIT.CNTVAL = 0;
+	WDT.WDTSR.BIT.REFEF  = 0;
+	WDT.WDTSR.BIT.UNDFF  = 0;
+	//WDT Reset Control Register
+	WDT.WDTRCR.BIT.RSTIRQS = 1;
+	//Non-Maskable Interrupt Enable Register (NMIER)
+	ICU.NMIER.BIT.WDTEN    = 0;
 
-        while( 1 ) /* software reset */
-        {
-        }
-    }
+	WDT.WDTRR = 0;
+	WDT.WDTRR = 0xff;
+
+	while (1); // Wait for Watchdog to kick in
 
     /* We shouldn't actually get here if the board supports the auto reset.
      * But, it doesn't hurt anything if we do although someone will need to
@@ -734,8 +714,6 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const pFileConte
         switch( eState )
         {
             case OtaImageStateAccepted:
-                R_FLASH_Close();
-                R_FLASH_Open();
                 cb_func_info.pcallback = ota_header_flashing_callback;
                 cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
                 R_FLASH_Control( FLASH_CMD_SET_BGO_CALLBACK, ( void * ) &cb_func_info );
@@ -1011,6 +989,8 @@ static int32_t ota_context_update_user_firmware_header( OtaFileContext_t * pFile
     data_length = *( source_pointer + 1 ) + OTA_SIGUNATURE_SEQUENCE_INFO_LENGTH;
     memset( destination_pointer, 0, sizeof( destination_pointer ) );
 
+    xSemaphoreTake(xSemaphoreFlashAccess, portMAX_DELAY);
+
     if( OTA_SIGUNATURE_SEQUENCE_TOP_VALUE == *source_pointer )
     {
         source_pointer += OTA_SIGUNATURE_SEQUENCE_INFO_LENGTH;
@@ -1050,8 +1030,6 @@ static int32_t ota_context_update_user_firmware_header( OtaFileContext_t * pFile
 
     if( R_OTA_ERR_NONE == ret )
     {
-        R_FLASH_Close();
-        R_FLASH_Open();
         cb_func_info.pcallback = ota_header_flashing_callback;
         cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
         R_FLASH_Control( FLASH_CMD_SET_BGO_CALLBACK, ( void * ) &cb_func_info );
@@ -1068,7 +1046,7 @@ static int32_t ota_context_update_user_firmware_header( OtaFileContext_t * pFile
         {
         }
     }
-
+    xSemaphoreGive(xSemaphoreFlashAccess);
     return ret;
 }
 
