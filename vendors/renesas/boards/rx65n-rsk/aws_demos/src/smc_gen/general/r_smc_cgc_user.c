@@ -18,11 +18,10 @@
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
-* File Name    : r_smc_cgc_user.c
-* Version      : 1.6.1
-* Device(s)    : R5F565NEDxFC
-* Description  : None
-* Creation Date: 2020-04-09
+* File Name        : r_smc_cgc_user.c
+* Version          : 2.0.0
+* Device(s)        : R5F565NEDxFC
+* Description      : This file implements CGC setting.
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -55,10 +54,9 @@ Global variables and functions
 
 void R_CGC_Create_UserInit(void)
 {
-    /* Start user code for code init. Do not edit comment generated here */
+    /* Start user code for user init. Do not edit comment generated here */
     /* End user code. Do not edit comment generated here */
 }
 
 /* Start user code for adding. Do not edit comment generated here */
-/* End user code. Do not edit comment generated here */   
-
+/* End user code. Do not edit comment generated here */

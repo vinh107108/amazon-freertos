@@ -18,11 +18,10 @@
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
-* File Name    : Pin.c
-* Version      : 1.0.2
-* Device(s)    : R5F565NEDxFC
-* Description  : This file implements SMC pin code generation.
-* Creation Date: 2020-04-09
+* File Name        : Pin.c
+* Version          : 1.0.2
+* Device(s)        : R5F565NEDxFC
+* Description      : This file implements SMC pin code generation.
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -144,5 +143,5 @@ void R_Pins_Create(void)
     // PORTJ.PMR.BIT.B2 = 1U; // Please set the PMR bit after TE bit is set to 1.
 
     R_BSP_RegisterProtectEnable(BSP_REG_PROTECT_MPC);
-}   
+}
 
