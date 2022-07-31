@@ -14,7 +14,7 @@
 * following link:
 * http://www.renesas.com/disclaimer 
 *
-* Copyright (C) 2014-2019 Renesas Electronics Corporation. All rights reserved.
+* Copyright (C) 2014-2021 Renesas Electronics Corporation. All rights reserved.
 ***********************************************************************************************************************/
 /***********************************************************************************************************************
 * File Name    : r_flash_rx_if.h
@@ -148,6 +148,10 @@
 *           09.09.2019 4.30    Added support for RX13T.
 *           27.09.2019 4.40    Added support for RX23E-A.
 *           18.11.2019 4.50    Added support for RX66N, and RX72N.
+*           26.06.2020 4.60    Modified some minor problem.
+*           23.10.2020 4.70    Added support for RX671.
+*           23.04.2021 4.80    Added support for RX140.
+*           10.12.2021 4.81    Added support for Tool News R20TS0765, R20TS0772, and some minor updates.
 ***********************************************************************************************************************/
 
 #ifndef FLASH_INTERFACE_HEADER_FILE
@@ -165,7 +169,7 @@ Macro definitions
 ***********************************************************************************************************************/
 /* Driver Version Number. */
 #define FLASH_RX_VERSION_MAJOR           (4)
-#define FLASH_RX_VERSION_MINOR           (50)
+#define FLASH_RX_VERSION_MINOR           (81)
 
 
 /***********************************************************************************************************************
@@ -181,7 +185,8 @@ Typedef definitions
 #if (defined(MCU_RX110) || defined(MCU_RX111) || defined(MCU_RX113) || \
      defined(MCU_RX130) || defined(MCU_RX231) || defined(MCU_RX23T) || \
      defined(MCU_RX24T) || defined(MCU_RX24U) || defined(MCU_RX230) || \
-     defined(MCU_RX23W) || defined(MCU_RX13T) || defined(MCU_RX23E_A))
+     defined(MCU_RX23W) || defined(MCU_RX13T) || defined(MCU_RX23E_A) || \
+     defined(MCU_RX140))
 #define FLASH_TYPE              FLASH_TYPE_1
 
 #elif (defined(MCU_RX64M) || defined(MCU_RX66T) || defined(MCU_RX71M) || \
@@ -189,10 +194,15 @@ Typedef definitions
 #define FLASH_TYPE              FLASH_TYPE_3
 
 #elif (defined(MCU_RX651) || defined(MCU_RX65N) || defined(MCU_RX72M) || \
-       defined(MCU_RX66N) || defined(MCU_RX72N))
+       defined(MCU_RX66N) || defined(MCU_RX72N) || defined(MCU_RX671))
 #define FLASH_TYPE              FLASH_TYPE_4
 #endif
 
+#define FLASH_TYPE_VARIETY_A    (1)
+
+#if (defined(MCU_RX140))
+#define FLASH_TYPE_VARIETY      (FLASH_TYPE_VARIETY_A)
+#endif
 
 /* FEATURE GROUPINGS */
 
@@ -225,12 +235,12 @@ Typedef definitions
 #endif
 
 #if (defined(MCU_RX66T) || defined(MCU_RX72T) || defined(MCU_RX72M) || \
-     defined(MCU_RX66N) || defined(MCU_RX72N))
+     defined(MCU_RX66N) || defined(MCU_RX72N) || defined(MCU_RX671))
 #define FLASH_HAS_NON_CACHED_RANGES     1
 #endif
 
 #if (defined(MCU_RX64_ALL) || defined(MCU_RX65_ALL) || defined(MCU_RX66_ALL) || \
-     defined(MCU_RX71_ALL) || defined(MCU_RX72_ALL))
+     defined(MCU_RX71_ALL) || defined(MCU_RX72_ALL) || defined(MCU_RX67_ALL))
 #define FLASH_HAS_DIFF_CF_BLOCK_SIZES   1
 #endif
 
@@ -238,7 +248,7 @@ Typedef definitions
 #define FLASH_HAS_BOOT_SWAP     1
 #endif
 
-#if ((FLASH_TYPE == 4) && (MCU_ROM_SIZE_BYTES >= 1572864))
+#if (((FLASH_TYPE == 4) && (MCU_ROM_SIZE_BYTES >= 1572864)) || defined(MCU_RX67_ALL))
 #define FLASH_HAS_APP_SWAP      1
 #endif
 
@@ -260,7 +270,6 @@ Typedef definitions
 
 #if (defined(MCU_RX64M) || defined(MCU_RX71M))
 #define FLASH_HAS_FCU_RAM_ENABLE    (1)
-#define FLASH_HAS_2BIT_ERR_CHK      (1)
 #endif
 
 #if ((FLASH_TYPE == 4) && (FLASH_HAS_APP_SWAP == 1) && (BSP_CFG_CODE_FLASH_BANK_MODE == 0) && (FLASH_CFG_CODE_FLASH_ENABLE == 1))
@@ -293,7 +302,8 @@ typedef enum _flash_err
     FLASH_ERR_UNSUPPORTED,  // Command not supported for this flash type
     FLASH_ERR_SECURITY,     // Pgm/Erase error due to part locked (FAW.FSPR)
     FLASH_ERR_TIMEOUT,      // Timeout Condition
-    FLASH_ERR_ALREADY_OPEN  // Open() called twice without intermediate Close()
+    FLASH_ERR_ALREADY_OPEN, // Open() called twice without intermediate Close()
+    FLASH_ERR_HOCO          // The HOCO is not running.
 } flash_err_t;
 
 
@@ -341,7 +351,6 @@ typedef enum _flash_cmd
 /*Result type for certain operations*/
 typedef enum _flash_res
 {
-    FLASH_RES_INVALID,                      // Invalid condition
     FLASH_RES_LOCKBIT_STATE_PROTECTED,      // (Flash Type 3) Result for FLASH_CMD_LOCKBIT_READ
     FLASH_RES_LOCKBIT_STATE_NON_PROTECTED,  // (Flash Type 3) Result for FLASH_CMD_LOCKBIT_READ
     FLASH_RES_BLANK,                        // Result for Blank Check Function
@@ -423,11 +432,12 @@ typedef struct
 /* Control() FLASH_CMD_BANK_GET: Gets bank address at next reset. Running app is at FFF00000. */
 typedef enum _flash_bank
 {
+    FLASH_BANK1          = 0,           // BANKSEL.BANKSWP is 000
+    FLASH_BANK0          = 1,           // BANKSEL.BANKSWP is 111
     FLASH_BANK0_FFE00000 = 0,           // BANKSEL.BANKSWP is 000
     FLASH_BANK1_FFF00000 = 0,           // BANKSEL.BANKSWP is 000
     FLASH_BANK0_FFF00000 = 1,           // BANKSEL.BANKSWP is 111
-    FLASH_BANK1_FFE00000 = 1,           // BANKSEL.BANKSWP is 111
-    FLASH_BANK0_END_ENUM
+    FLASH_BANK1_FFE00000 = 1            // BANKSEL.BANKSWP is 111
 } flash_bank_t;
 
 #endif
@@ -483,8 +493,7 @@ typedef enum _flash_no_cache_size
     FLASH_NON_CACHED_256_KBYTES = 0x40000,
     FLASH_NON_CACHED_512_KBYTES = 0x80000,
     FLASH_NON_CACHED_1_MBYTE    = 0x100000,
-    FLASH_NON_CACHED_2_MBYTE    = 0x200000,
-    FLASH_NON_CACHED_END_ENUM
+    FLASH_NON_CACHED_2_MBYTE    = 0x200000
 } flash_non_cached_size_t;
 
 typedef struct _flash_non_cached
@@ -528,6 +537,5 @@ flash_err_t R_FLASH_Erase(flash_block_address_t block_start_address, uint32_t nu
 flash_err_t R_FLASH_BlankCheck(uint32_t address, uint32_t num_bytes, flash_res_t *blank_check_result);
 flash_err_t R_FLASH_Control(flash_cmd_t cmd, void *pcfg);
 uint32_t R_FLASH_GetVersion (void);
-void R_FlashCodeCopy(void);
 
 #endif /* FLASH_INTERFACE_HEADER_FILE */

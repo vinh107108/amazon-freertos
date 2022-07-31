@@ -14,7 +14,7 @@
 * following link:
 * http://www.renesas.com/disclaimer
 *
-* Copyright (C) 2014-2019 Renesas Electronics Corporation. All rights reserved.
+* Copyright (C) 2014-2021 Renesas Electronics Corporation. All rights reserved.
 ********************************************************************************************************************/
 /*******************************************************************************************************************
 * File Name : r_flash_type3.c
@@ -38,6 +38,8 @@
 *           18.11.2016 3.00    Merged functions common to other flash types into r_flash_fcu.c and r_flash_group.c.
 *           27.22.2018 3.10    Added #if FLASH_HAS_2BIT_ERR_CHK (not supported by RX66T).
 *           19.04.2019 4.00    Added support for GNUC and ICCRX.
+*           24.06.2020 4.60    Modified to set the timeout value on global variable in flash_lockbit_write().
+*           10.12.2021 4.81    Modified the if statement for error judgment of flash type 3 in do_cmdlk_recovery().
 ********************************************************************************************************************/
 
 /********************************************************************************************************************
@@ -136,12 +138,13 @@ void do_cmdlk_recovery(void)
         }
     }
 
-    if ((FLASH.FSTATR.BIT.FCUERR == 1)
-#ifdef FLASH_HAS_2BIT_ERR_CHK
+    if ((FLASH.FSTATR.BIT.FLWEERR == 1)
+#ifdef FLASH_HAS_FCU_RAM_ENABLE
      || (FLASH.FSTATR.BIT.FRDTCT == 1)
      || ((FLASH.FSTATR.BIT.FCUERR == 0) && (FLASH.FSTATR.BIT.FRDTCT == 0) && (FLASH.FSTATR.BIT.FLWEERR == 0))
+     || (FLASH.FSTATR.BIT.FCUERR == 1)
 #endif
-     || (FLASH.FSTATR.BIT.FLWEERR == 1))
+    )
 
     {
         flash_stop();
@@ -383,7 +386,6 @@ FLASH_PE_MODE_SECTION
 flash_err_t flash_lockbit_write(flash_block_address_t block_address, uint32_t num_blocks)
 {
     flash_err_t err = FLASH_SUCCESS;
-    volatile uint32_t wait_cnt = FLASH_FRDY_CMD_TIMEOUT;
 
 
     if (g_current_parameters.bgo_enabled_cf == true)
@@ -411,6 +413,7 @@ flash_err_t flash_lockbit_write(flash_block_address_t block_address, uint32_t nu
         }
 
         /* In blocking mode. Wait until FRDY is 1 unless timeout occurs. */
+        g_current_parameters.wait_cnt = FLASH_FRDY_CMD_TIMEOUT;
         err = flash_wait_frdy();
         if (err != FLASH_SUCCESS)
         {

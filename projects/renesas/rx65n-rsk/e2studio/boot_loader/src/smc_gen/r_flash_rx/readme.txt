@@ -5,12 +5,12 @@ r_flash_rx
 
 Document Number 
 ---------------
-r01an2184ej0450
-r01an2184jj0450
+r01an2184ej0481
+r01an2184jj0481
 
 Version
 -------
-v4.50
+v4.81
 
 Overview
 --------
@@ -38,6 +38,7 @@ Supported MCUs
 * RX113 Group
 * RX130 Group
 * RX13T Group
+* RX140 Group
 * RX230 Group
 * RX231 Group
 * RX23E-A Group
@@ -49,6 +50,7 @@ Supported MCUs
 * RX651, RX65N Group
 * RX66N Group
 * RX66T Group
+* RX671 Group
 * RX71M Group
 * RX72M Group
 * RX72N Group
@@ -62,6 +64,7 @@ Boards Tested On
 * RSKRX113
 * RSKRX130
 * RX13T CPU Card
+* RX140 Target Board
 * RSKRX231
 * RSSKRX23E-A
 * RSKRX23T
@@ -72,6 +75,7 @@ Boards Tested On
 * RSKRX65N
 * RSKRX65N-2MB
 * RSKRX66T
+* RSKRX671
 * RSKRX71M
 * RSKRX72M
 * RSKRX72N
@@ -94,7 +98,7 @@ Peripherals Used Directly
 
 Required Packages
 -----------------
-* r_bsp      V5.50
+* r_bsp      V6.20
 
 How to add to your project
 --------------------------
@@ -125,9 +129,9 @@ How to add to your project
 
 Toolchain(s) Used
 -----------------
-* Renesas RXC 3.01.00
-* GNU GNURX 4.08.04.201902
-* IAR ICCRX 4.12.01
+* Renesas RXC 3.03.00
+* GNU GNURX 8.03.00.202102
+* IAR ICCRX 4.20.03
 
 
 File Structure
@@ -138,9 +142,9 @@ r_flash_rx
 |
 +---doc
 |   +-- en
-|   |   +-- r01an2184ej0450-rx-flash.pdf
+|   |   +-- r01an2184ej0481-rx-flash.pdf
 |   +-- ja
-|       +-- r01an2184jj0450-rx-flash.pdf
+|       +-- r01an2184jj0481-rx-flash.pdf
 |
 +---ref
 |   +-- r_flash_rx_config_reference.h
@@ -152,19 +156,14 @@ r_flash_rx
     +-- r_flash_group.h
     +-- r_flash_fcu.c
     +-- r_flash_fcu.h
+    +-- r_flash_nofcu.c
+    +-- r_flash_nofcu.h
+    +-- r_flash_targets.h
     |
     +-- flash_type_1
         |
-        +-- r_codeflash_extra.c
-        +-- r_codeflash_extra.h
-        +-- r_codeflash.c
-        +-- r_codeflash.h
-        +-- r_dataflash.c
-        +-- r_dataflash.h
-        +-- r_flash_common.h 
         +-- r_flash_type1.c
         +-- r_flash_type1_if.h
-        +-- r_flash_utils.c 
     |
     +-- flash_type_3
         |
@@ -192,6 +191,9 @@ r_flash_rx
         |
         +--rx13t
              +-- r_flash_rx13t.h
+        |
+        +--rx140
+             +-- r_flash_rx140.h
         |
         +--rx231
              +-- r_flash_rx231.h
@@ -222,6 +224,9 @@ r_flash_rx
         |
         +--rx66t
              +-- r_flash_rx66t.h
+        |
+        +--rx671
+             +-- r_flash_rx671.h
         |
         +--rx71m
              +-- r_flash_rx71m.h

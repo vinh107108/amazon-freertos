@@ -14,7 +14,7 @@
 * following link:
 * http://www.renesas.com/disclaimer 
 *
-* Copyright (C) 2014-2019 Renesas Electronics Corporation. All rights reserved.
+* Copyright (C) 2014-2021 Renesas Electronics Corporation. All rights reserved.
 ***********************************************************************************************************************/
 /***********************************************************************************************************************
 * File Name    : r_flash_rx.h
@@ -45,6 +45,9 @@
 *           27.09.2019 4.40    Added RX23E-A.
 *                              Added include path for rx230.
 *           18.11.2019 4.50    Added RX66N, and RX72N.
+*           26.06.2020 4.60    Added prototypes for flash_InterruptRequestEnable() and flash_InterruptRequestDisable().
+*           23.10.2020 4.70    Added RX671.
+*           23.04.2021 4.80    Added RX140.
 ***********************************************************************************************************************/
 
 #ifndef FLASH_RX_HEADER_FILE
@@ -64,6 +67,8 @@
     #include "./src/targets/rx130/r_flash_rx130.h"
 #elif defined(MCU_RX13T)
     #include "./src/targets/rx13t/r_flash_rx13t.h"
+#elif defined(MCU_RX140)
+    #include "./src/targets/rx140/r_flash_rx140.h"
 #elif defined(MCU_RX230)
     #include "./src/targets/rx230/r_flash_rx230.h"
 #elif defined(MCU_RX231)
@@ -79,13 +84,15 @@
 #elif defined(MCU_RX24U)
     #include "./src/targets/rx24u/r_flash_rx24u.h"
 #elif defined(MCU_RX64M)
-    #include <targets/rx64m/r_flash_rx64m.h>
+    #include "./src/targets/rx64m/r_flash_rx64m.h"
 #elif defined(MCU_RX651) || defined(MCU_RX65N)
     #include "./src/targets/rx65n/r_flash_rx65n.h"
 #elif defined(MCU_RX66T)
     #include "./src/targets/rx66t/r_flash_rx66t.h"
 #elif defined(MCU_RX66N)
     #include "./src/targets/rx66n/r_flash_rx66n.h"
+#elif defined(MCU_RX671)
+    #include "./src/targets/rx671/r_flash_rx671.h"
 #elif defined(MCU_RX71M)
     #include "./src/targets/rx71m/r_flash_rx71m.h"
 #elif defined(MCU_RX72T)
@@ -192,6 +199,8 @@ extern flash_err_t flash_lock_state(flash_states_t new_state);
 extern void flash_release_state(void);
 extern bool flash_softwareLock (int32_t * const plock);
 extern bool flash_softwareUnlock (int32_t * const plock);
+extern void flash_InterruptRequestEnable (uint32_t vector);
+extern void flash_InterruptRequestDisable (uint32_t vector);
 
 
 #endif /* FLASH_RX_HEADER_FILE */
