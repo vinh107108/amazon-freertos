@@ -202,7 +202,7 @@ CK_RV PKCS11_PAL_Initialize( void )
     CK_RV xResult = CKR_OK;
 
     CRYPTO_Init();
-    //R_FLASH_Open();
+    R_FLASH_Open();
 
 #if defined (BSP_MCU_RX63N) || (BSP_MCU_RX631) || (BSP_MCU_RX630)
     flash_access_window_config_t flash_access_window_config;
@@ -217,7 +217,7 @@ CK_RV PKCS11_PAL_Initialize( void )
     /* copy data from storage to ram */
     memcpy(&pkcs_control_block_data_image, (void *)&pkcs_control_block_data, sizeof(pkcs_control_block_data_image));
 
-    //R_FLASH_Close();
+    R_FLASH_Close();
 
     return xResult;
 }
@@ -243,7 +243,7 @@ CK_OBJECT_HANDLE PKCS11_PAL_SaveObject( CK_ATTRIBUTE_PTR pxLabel,
     mbedtls_sha256_context ctx;
 
     mbedtls_sha256_init(&ctx);
-	//R_FLASH_Open();
+	R_FLASH_Open();
 
 #if defined (BSP_MCU_RX63N) || (BSP_MCU_RX631) || (BSP_MCU_RX630)
     flash_access_window_config_t flash_access_window_config;
@@ -377,7 +377,7 @@ CK_OBJECT_HANDLE PKCS11_PAL_SaveObject( CK_ATTRIBUTE_PTR pxLabel,
         }
     }
 
-	//R_FLASH_Close();
+	R_FLASH_Close();
     return xHandle;
 
 }

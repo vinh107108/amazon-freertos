@@ -74,6 +74,9 @@
 *                                Changed initial value of the following macro definitions.
 *                                - BSP_CFG_MCU_PART_GROUP
 *                                - BSP_CFG_MCU_PART_SERIES
+*         : 11.02.2022 3.01      Changed initial value of the following macro definitions.
+*                                - BSP_CFG_SWINT_UNIT1_ENABLE
+*                                - BSP_CFG_SWINT_UNIT2_ENABLE
 ***********************************************************************************************************************/
 #ifndef R_BSP_CONFIG_REF_HEADER_FILE
 #define R_BSP_CONFIG_REF_HEADER_FILE
