@@ -18,28 +18,44 @@
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
-* File Name    : r_smc_cgc.c
-* Version      : 1.6.1
-* Device(s)    : R5F565NEDxFC
-* Description  : This file implements cgc setting
-* Creation Date: 2020-04-09
+* File Name        : r_smc_cgc.c
+* Version          : 2.0.0
+* Device(s)        : R5F565NEDxFC
+* Description      : This file implements CGC setting.
 ***********************************************************************************************************************/
+
+/***********************************************************************************************************************
+Pragma directive
+***********************************************************************************************************************/
+/* Start user code for pragma. Do not edit comment generated here */
+/* End user code. Do not edit comment generated here */
+
 /***********************************************************************************************************************
 Includes
 ***********************************************************************************************************************/
 #include "r_cg_macrodriver.h"
 #include "r_smc_cgc.h"
-#include "platform.h"
+/* Start user code for include. Do not edit comment generated here */
+/* End user code. Do not edit comment generated here */
+#include "r_cg_userdefine.h"
+
+/***********************************************************************************************************************
+Global variables and functions
+***********************************************************************************************************************/
+/* Start user code for global. Do not edit comment generated here */
+/* End user code. Do not edit comment generated here */
 
 /***********************************************************************************************************************
 * Function Name: R_CGC_Create
-* Description  : This function Used to initializes the clock generator
+* Description  : This function generates CGC pin settings
 * Arguments    : None
 * Return Value : None
 ***********************************************************************************************************************/
 
 void R_CGC_Create(void)
 {
-
     R_CGC_Create_UserInit();
 }
+
+/* Start user code for adding. Do not edit comment generated here */
+/* End user code. Do not edit comment generated here */
