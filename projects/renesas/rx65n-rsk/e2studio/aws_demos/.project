@@ -600,26 +600,6 @@
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/core_http_client.c</locationURI>
 		</link>
 		<link>
-			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/include/llhttp.h</name>
-			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/include/llhttp.h</locationURI>
-		</link>
-		<link>
-			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/api.c</name>
-			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/api.c</locationURI>
-		</link>
-		<link>
-			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/http.c</name>
-			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/http.c</locationURI>
-		</link>
-		<link>
-			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/llhttp.c</name>
-			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/llhttp.c</locationURI>
-		</link>
-		<link>
 			<name>libraries/coreJSON/source/core_json.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreJSON/source/core_json.c</locationURI>
@@ -1093,108 +1073,108 @@
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_aead.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_aead.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_aead.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_aead.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_cipher.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_cipher.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_cipher.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_cipher.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_client.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_client.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_core.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_core.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_driver_wrappers.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_driver_wrappers.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_driver_wrappers.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_driver_wrappers.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_ecp.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_ecp.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_ecp.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_ecp.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_hash.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_hash.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_hash.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_hash.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_invasive.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_invasive.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_its.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_its.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_mac.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_mac.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_mac.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_mac.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_random_impl.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_random_impl.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_rsa.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_rsa.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_rsa.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_rsa.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_se.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_se.c</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_se.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_se.h</locationURI>
-		</link>	
-		<link>	
+		</link>
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/psa_crypto_slot_management.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/psa_crypto_slot_management.c</locationURI>
@@ -1269,11 +1249,11 @@
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/ssl_cookie.c</locationURI>
 		</link>
-		<link>	
+		<link>
 			<name>libraries/3rdparty/mbedtls/library/ssl_msg.c</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/3rdparty/mbedtls/library/ssl_msg.c</locationURI>
-		</link>	
+		</link>
 		<link>
 			<name>libraries/3rdparty/mbedtls/library/ssl_srv.c</name>
 			<type>1</type>
@@ -2525,6 +2505,26 @@
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/abstractions/pkcs11/corePKCS11/source/portable/mbedtls/core_pkcs11_mbedtls.c</locationURI>
 		</link>
 		<link>
+			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/include/llhttp.h</name>
+			<type>1</type>
+			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/include/llhttp.h</locationURI>
+		</link>
+		<link>
+			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/api.c</name>
+			<type>1</type>
+			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/api.c</locationURI>
+		</link>
+		<link>
+			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/http.c</name>
+			<type>1</type>
+			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/http.c</locationURI>
+		</link>
+		<link>
+			<name>libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/llhttp.c</name>
+			<type>1</type>
+			<locationURI>AWS_IOT_MCU_ROOT/libraries/coreHTTP/source/dependency/3rdparty/llhttp/src/llhttp.c</locationURI>
+		</link>
+		<link>
 			<name>libraries/freertos_plus/standard/freertos_plus_tcp/portable/Compiler/Renesas/pack_struct_end.h</name>
 			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/libraries/freertos_plus/standard/freertos_plus_tcp/portable/Compiler/Renesas/pack_struct_end.h</locationURI>
@@ -2890,11 +2890,6 @@
 			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_config/r_byteq_config.h</locationURI>
 		</link>
 		<link>
-			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_config/r_ether_rx_config.h</name>
-			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_config/r_ether_rx_config.h</locationURI>
-		</link>
-		<link>
 			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_config/r_cmt_rx_config.h</name>
 			<type>1</type>
 			<locationURI>SMC_GENERATED_LOC/r_config/r_cmt_rx_config.h</locationURI>
@@ -2942,16 +2937,6 @@
 		<link>
 			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_ether_rx_pinset.c</name>
 			<type>1</type>
-			<locationURI>SMC_GENERATED_LOC/r_pincfg/r_ether_rx_pinset.c</locationURI>
-		</link>
-		<link>
-			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_ether_rx_pinset.h</name>
-			<type>1</type>
-			<locationURI>SMC_GENERATED_LOC/r_pincfg/r_ether_rx_pinset.h</locationURI>
-		</link>
-		<link>
-			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_ether_rx_pinset.c</name>
-			<type>1</type>
 			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_ether_rx_pinset.c</locationURI>
 		</link>
 		<link>
@@ -2960,19 +2945,19 @@
 			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_ether_rx_pinset.h</locationURI>
 		</link>
 		<link>
+			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_pinset.h</name>
+			<type>1</type>
+			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_pinset.h</locationURI>
+		</link>
+		<link>
 			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_s12ad_rx_pinset.c</name>
 			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_s12ad_rx_pinset.c</locationURI>
+			<locationURI>SMC_GENERATED_LOC/r_pincfg/r_s12ad_rx_pinset.c</locationURI>
 		</link>
 		<link>
 			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_s12ad_rx_pinset.h</name>
 			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_s12ad_rx_pinset.h</locationURI>
-		</link>
-		<link>
-			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_pinset.h</name>
-			<type>1</type>
-			<locationURI>AWS_IOT_MCU_ROOT/vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_pinset.h</locationURI>
+			<locationURI>SMC_GENERATED_LOC/r_pincfg/r_s12ad_rx_pinset.h</locationURI>
 		</link>
 		<link>
 			<name>vendors/renesas/boards/rx65n-rsk/aws_demos/src/smc_gen/r_pincfg/r_sci_rx_pinset.c</name>

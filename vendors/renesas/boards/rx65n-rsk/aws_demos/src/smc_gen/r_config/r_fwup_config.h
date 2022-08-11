@@ -30,6 +30,8 @@
  *           25.03.2022 1.04    Change the supported FreeRTOS version
  *                              Select data area from DF/CF
  *                              Added support for RX140-256KB
+ *           31.05.2022 1.05    Added support for Azure ADU
+ *                              Added support for RX660
  *********************************************************************************************************************/
 #ifndef FWUP_CONFIG_H
 #define FWUP_CONFIG_H
