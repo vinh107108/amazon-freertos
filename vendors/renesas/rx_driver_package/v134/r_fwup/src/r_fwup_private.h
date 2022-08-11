@@ -29,6 +29,8 @@
  *           25.03.2022 1.04    Change the supported FreeRTOS version
  *                              Select data area from DF/CF
  *                              Added support for RX140-256KB
+ *           31.05.2022 1.05    Added support for Azure ADU
+ *                              Added support for RX660
  *********************************************************************************************************************/
 
 
@@ -148,14 +150,14 @@
 
 /*------------------------------------------ firmware update configuration (start) -----------------------------------*/
 /* Common definition ------------------------------------------------------------------------------------------------ */
-#define BOOT_LOADER_PGM_SIZE (65536)
+#define BOOT_LOADER_PGM_SIZE                        (65536)
 #define BOOT_LOADER_USER_FIRMWARE_HEADER_LENGTH     (0x200)
 #define BOOT_LOADER_USER_FIRMWARE_DESCRIPTOR_LENGTH (0x100)
-#define INITIAL_FIRMWARE_FILE_NAME "userprog.rsu"
+#define INITIAL_FIRMWARE_FILE_NAME                  "userprog.rsu"
 
 #define FLASH_INTERRUPT_PRIORITY (14)    /* 0(low) - 15(high) */
 
-#define BOOT_LOADER_LOW_ADDRESS (FLASH_CF_BLOCK_END - BOOT_LOADER_PGM_SIZE + 1)
+#define BOOT_LOADER_LOW_ADDRESS   (FLASH_CF_BLOCK_END - BOOT_LOADER_PGM_SIZE + 1)
 #define USER_RESET_VECTOR_ADDRESS (BOOT_LOADER_LOW_ADDRESS - 4)
 #if (FWUP_CFG_OTA_DATA_STORAGE == 0)
 #define BOOT_LOADER_USER_CONST_DATA_LOW_ADDRESS           (FLASH_DF_BLOCK_0)
@@ -274,10 +276,14 @@
 #define FWUP_WRITE_BLOCK_SIZE       (1024)
 /* For reduce the ROM size by control printf */
 #if (FWUP_CFG_BOOTLOADER_LOG_DISABLE == 1)
+/* Log output w/o variable output */
 # define DEBUG_LOG(str)
+/* Log output w/ variable output */
 # define DEBUG_LOG2(fmt, ...)
 #else
+/* Log output w/o variable output */
 #define DEBUG_LOG(fmt)           printf(fmt)
+/* Log output w/ variable output */
 #define DEBUG_LOG2(fmt, ...)     printf(fmt, __VA_ARGS__)
 #endif /* FWUP_CFG_BOOTLOADER_LOG_DISABLE */
 #else
@@ -286,57 +292,70 @@
 
 #define FLASH_DF_TOTAL_BLOCK_SIZE (FLASH_DF_BLOCK_INVALID - FLASH_DF_BLOCK_0)
 
-#define INTEGRITY_CHECK_SCHEME_HASH_SHA256_STANDALONE "hash-sha256"
+#define INTEGRITY_CHECK_SCHEME_HASH_SHA256_STANDALONE      "hash-sha256"
 #define INTEGRITY_CHECK_SCHEME_SIG_SHA256_ECDSA_STANDALONE "sig-sha256-ecdsa"
 
 #if (FWUP_CFG_COMMUNICATION_FUNCTION == FWUP_COMMUNICATION_SCI)  /* Case of SCI */
 #if !defined(FWUP_CFG_SERIAL_TERM_SCI)
 #error "Error! Need to define FWUP_CFG_SERIAL_TERM_SCI in r_fwup_config.h"
 #elif FWUP_CFG_SERIAL_TERM_SCI == (0)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI0())
-#define SCI_CH_serial_term          (SCI_CH0)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI0())
+#define SCI_CH_serial_term           (SCI_CH0)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH0_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (1)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI1())
-#define SCI_CH_serial_term          (SCI_CH1)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI1())
+#define SCI_CH_serial_term           (SCI_CH1)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH1_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (2)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI2())
-#define SCI_CH_serial_term          (SCI_CH2)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI2())
+#define SCI_CH_serial_term           (SCI_CH2)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH2_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (3)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI3())
-#define SCI_CH_serial_term          (SCI_CH3)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI3())
+#define SCI_CH_serial_term           (SCI_CH3)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH3_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (4)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI4())
-#define SCI_CH_serial_term          (SCI_CH4)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI4())
+#define SCI_CH_serial_term           (SCI_CH4)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH4_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (5)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI5())
-#define SCI_CH_serial_term          (SCI_CH5)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI5())
+#define SCI_CH_serial_term           (SCI_CH5)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH5_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (6)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI6())
-#define SCI_CH_serial_term          (SCI_CH6)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI6())
+#define SCI_CH_serial_term           (SCI_CH6)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH6_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (7)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI7())
-#define SCI_CH_serial_term          (SCI_CH7)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI7())
+#define SCI_CH_serial_term           (SCI_CH7)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH7_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (8)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI8())
-#define SCI_CH_serial_term          (SCI_CH8)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI8())
+#define SCI_CH_serial_term           (SCI_CH8)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH8_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (9)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI9())
-#define SCI_CH_serial_term          (SCI_CH9)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI9())
+#define SCI_CH_serial_term           (SCI_CH9)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH9_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (10)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI10())
-#define SCI_CH_serial_term          (SCI_CH10)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI10())
+#define SCI_CH_serial_term           (SCI_CH10)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH10_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (11)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI11())
-#define SCI_CH_serial_term          (SCI_CH11)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI11())
+#define SCI_CH_serial_term           (SCI_CH11)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH11_TX_BUFSIZ)
 #elif FWUP_CFG_SERIAL_TERM_SCI == (12)
-#define R_SCI_PinSet_serial_term()  (R_SCI_PinSet_SCI12())
-#define SCI_CH_serial_term          (SCI_CH12)
+#define R_SCI_PinSet_serial_term()   (R_SCI_PinSet_SCI12())
+#define SCI_CH_serial_term           (SCI_CH12)
+#define SCI_CH_TX_BUFSIZ_serial_term (SCI_CFG_CH12_TX_BUFSIZ)
 #else /* FWUP_CFG_SERIAL_TERM_SCI */
 #error "Error! Invalid setting for FWUP_CFG_SERIAL_TERM_SCI in r_fwup_config.h"
 #endif /*  containing !definedFWUP_CFG_SERIAL_TERM_SCI */
 #endif  /* (FWUP_CFG_COMMUNICATION_FUNCTION == FWUP_COMMUNICATION_SCI) */
 
-#define BOOT_LOADER_MAGIC_CODE "Renesas"
+#define BOOT_LOADER_MAGIC_CODE        "Renesas"
 #define BOOT_LOADER_MAGIC_CODE_LENGTH (7)
 
 /* The OTA signature algorithm string is specified by the PAL. */
@@ -349,13 +368,17 @@
  * When @ref FWUP_CFG_LOG_LEVEL is #LOG_NONE, logging is disabled and no
  * logging messages are printed.
  */
-#define LOG_NONE            0
-#define LOG_ERROR           1
-#define LOG_WARN            2
-#define LOG_INFO            3
-#define LOG_DEBUG           4
-#define LOG_INFO_NOLF       5
-#define LOG_INFO_CONTINUE   6
+#define LOG_NONE            (0)
+#define LOG_ERROR           (1)
+#define LOG_WARN            (2)
+#define LOG_INFO            (3)
+#define LOG_DEBUG           (4)
+#define LOG_INFO_NOLF       (5)
+#define LOG_INFO_CONTINUE   (6)
+
+#if FWUP_CFG_LOG_LEVEL > LOG_DEBUG
+#error "Illegal setting of FWUP_CFG_LOG_LEVEL. Check the CFG value of r_fwup_config.h"
+#endif /* FWUP_CFG_LOG_LEVEL > LOG_DEBUG */
 
 #if FWUP_CFG_LOG_LEVEL == LOG_DEBUG
 /* All log level messages will logged. */
@@ -402,7 +425,7 @@
 #define LogDebug( message )
 #endif /* FWUP_CFG_LOG_LEVEL == LOG_DEBUG */
 
-#define configLOGGING_MAX_MESSAGE_LENGTH 200
+#define configLOGGING_MAX_MESSAGE_LENGTH (200)
 
 /**
  * @constantspage{ota,OTA library}
@@ -463,8 +486,8 @@
 /* @[define_ota_err_codes] */
 
 /* @[define_ota_err_code_helpers] */
-#define OTA_PAL_ERR_MASK    0xffffffUL                                                                                                        /*!< The PAL layer uses the signed low 24 bits of the OTA error code. */
-#define OTA_PAL_SUB_BITS    24U                                                                                                               /*!< The OTA Agent error code is the highest 8 bits of the word. */
+#define OTA_PAL_ERR_MASK                    (0xffffffUL)                                                                                      /*!< The PAL layer uses the signed low 24 bits of the OTA error code. */
+#define OTA_PAL_SUB_BITS                    (24U)                                                                                             /*!< The OTA Agent error code is the highest 8 bits of the word. */
 #define OTA_PAL_MAIN_ERR( err )             ( ( OtaPalMainStatus_t ) ( uint32_t ) ( ( uint32_t ) ( err ) >> ( uint32_t ) OTA_PAL_SUB_BITS ) ) /*!< Helper to get the OTA PAL main error code. */
 #define OTA_PAL_SUB_ERR( err )              ( ( uint32_t ) ( err ) & ( uint32_t ) OTA_PAL_ERR_MASK )                                          /*!< Helper to get the OTA PAL sub error code. */
 #define OTA_PAL_COMBINE_ERR( main, sub )    ( ( ( uint32_t ) ( main ) << ( uint32_t ) OTA_PAL_SUB_BITS ) | ( uint32_t ) ( sub ) )             /*!< Helper to combine the OTA PAL main and sub error code. */
@@ -709,10 +732,10 @@ typedef enum e_state_monitoring_flag
 
 typedef struct st_state_monitoring
 {
-    uint32_t                check_status_counter;       // Counter for monitoring state.
+    uint32_t                  check_status_counter;       // Counter for monitoring state.
     e_state_monitoring_flag_t state_transit_error_flag;   // State transition error flag.
     e_fwup_state_t            last_secure_boot_state;     // Keep last state.
-    bool                    state_transit_flag;         // State transition execution flag.
+    bool                      state_transit_flag;         // State transition execution flag.
 } st_state_monitoring_t;
 
 typedef struct st_sci_buffer_control
@@ -724,9 +747,9 @@ typedef struct st_sci_buffer_control
 
 typedef struct st_sci_receive_control_block
 {
-    st_sci_buffer_control_t *p_sci_buffer_control;
-    uint32_t           total_byte_size;
-    uint32_t           current_state;
+    st_sci_buffer_control_t * p_sci_buffer_control;
+    uint32_t                total_byte_size;
+    uint32_t                current_state;
 } st_sci_receive_control_block_t;
 
 typedef struct st_firmware_update_control_block
@@ -773,24 +796,24 @@ typedef struct st_load_fw_control_block {
 typedef struct st_flash_block
 {
     uint32_t offset;
-    uint8_t  *p_binary;
+    uint8_t  * p_binary;
     uint32_t length;
 } st_flash_block_t;
 
 typedef struct st_fragmented_block_list
 {
-    st_flash_block_t                 content;
-    struct st_fragmented_block_list *next;
+    st_flash_block_t                content;
+    struct st_fragmented_block_list * next;
 } st_fragmented_block_list_t;
 
 typedef struct st_packet_block_for_queue
 {
     uint32_t ulOffset;
     uint32_t length;
-    uint8_t  *p_packet;
+    uint8_t  * p_packet;
 } st_packet_block_for_queue_t;
 
-extern const char cOTA_JSON_FileSignatureKey[OTA_FILE_SIG_KEY_STR_MAX_LENGTH];
+/* extern const char cOTA_JSON_FileSignatureKey[OTA_FILE_SIG_KEY_STR_MAX_LENGTH]; */   /* FIX ME. */
 extern bool g_is_opened;
 
 /* Function Name: fwup_flash_open */
@@ -800,11 +823,11 @@ flash_err_t fwup_flash_open (void);
 flash_err_t fwup_flash_close (void);
 
 /* Function Name: fwup_flash_set_callback */
-flash_err_t fwup_flash_set_callback (flash_interrupt_config_t *cb_func_info);
+flash_err_t fwup_flash_set_callback (flash_interrupt_config_t * cb_func_info);
 
 #if (FWUP_FLASH_BANK_MODE == 0)
 /* Function Name: fwup_flash_get_bank_info */
-flash_err_t fwup_flash_get_bank_info(flash_bank_t *);
+flash_err_t fwup_flash_get_bank_info (flash_bank_t * bank_info);
 #endif /* FWUP_FLASH_BANK_MODE == 0 */
 
 /* Function Name: fwup_flash_set_bank_toggle */

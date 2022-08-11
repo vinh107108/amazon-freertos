@@ -28,6 +28,8 @@
  *           25.03.2022 1.04    Change the supported FreeRTOS version
  *                              Select data area from DF/CF
  *                              Added support for RX140-256KB
+ *           31.05.2022 1.05    Added support for Azure ADU
+ *                              Added support for RX660
  **********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -45,7 +47,7 @@
  **********************************************************************************************************************/
 /* Version Number of API. */
 #define FWUP_VERSION_MAJOR  (1)
-#define FWUP_VERSION_MINOR  (04)
+#define FWUP_VERSION_MINOR  (05)
 
 /*****************************************************************************
  Typedef definitions
@@ -69,8 +71,8 @@ typedef enum e_fwup_err
  Public Functions
  ******************************************************************************/
 #if (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == 0)  /* Bootloader */
-fwup_err_t R_FWUP_Open(void);
-fwup_err_t R_FWUP_Close(void);
+fwup_err_t R_FWUP_Open (void);
+fwup_err_t R_FWUP_Close (void);
 int32_t R_FWUP_SecureBoot (void);
 void R_FWUP_ExecuteFirmware (void);
 #elif (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == 1)  /* Firmware update w/o OS */
@@ -83,19 +85,19 @@ void R_FWUP_SoftwareReset(void);
 OtaPalStatus_t R_FWUP_CreateFileForRx( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_Abort( OtaFileContext_t * const pFileContext );
 int16_t R_FWUP_WriteBlock( OtaFileContext_t * const pFileContext,
-                           uint32_t ulOffset,
-                           uint8_t * const pData,
-                           uint32_t ulBlockSize );
+                            uint32_t ulOffset,
+                            uint8_t * const pData,
+                            uint32_t ulBlockSize );
 OtaPalStatus_t R_FWUP_CloseFile( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_CheckFileSignature( OtaFileContext_t * const pFileContext );
 uint8_t * R_FWUP_ReadAndAssumeCertificate( const uint8_t * const pucCertName, uint32_t * const ulSignerCertSize );
 OtaPalStatus_t R_FWUP_ResetDevice( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_ActivateNewImage( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_SetPlatformImageState( OtaFileContext_t * const pFileContext,
-                                             OtaImageState_t eState );
+                                            OtaImageState_t eState );
 OtaPalImageState_t R_FWUP_GetPlatformImageState( OtaFileContext_t * const pFileContext );
 #endif
-uint32_t R_FWUP_GetVersion(void);
+uint32_t R_FWUP_GetVersion (void);
 
 #endif /* FWUP_IF_H */
 
