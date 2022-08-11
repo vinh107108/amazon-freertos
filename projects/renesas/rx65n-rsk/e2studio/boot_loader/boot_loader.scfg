@@ -937,8 +937,13 @@
             <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
             <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
         </configuration>
+        <configuration inuse="true" name="r_sys_time_rx">
+            <component description="Dependency : r_bsp version(s) 5.20&#10;Dependency : r_cmt_rx version(s) 4.00&#10;Generic system timer for RX MCUs using CMT module." detailDescription="Generic system timer for RX MCUs using CMT module." display="r_sys_time_rx" id="r_sys_time_rx1.01" version="1.01"/>
+            <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
+            <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
+        </configuration>
         <configuration inuse="true" name="r_fwup">
-            <component description="Dependency : r_byteq version(s) 1.81&#10;Dependency : r_cmt_rx version(s) 4.80&#10;Dependency : r_flash_rx version(s) 4.70&#10;Dependency : r_sci_rx version(s) 3.80&#10;Dependency : r_sys_time_rx version(s) 1.01&#10;This module is a software library for implementing the firmware update function in user applications." detailDescription="FWUP Library" display="r_fwup" id="r_fwup1.04" version="1.04">
+            <component description="Dependency : r_byteq version(s) 1.81&#10;Dependency : r_cmt_rx version(s) 4.80&#10;Dependency : r_flash_rx version(s) 4.70&#10;Dependency : r_sci_rx version(s) 3.80&#10;Dependency : r_sys_time_rx version(s) 1.01&#10;This module is a software library for implementing the firmware update function in user applications." detailDescription="FWUP Library" display="r_fwup" id="r_fwup1.05" version="1.05">
                 <gridItem id="FWUP_CFG_IMPLEMENTATION_ENVIRONMENT" selectedIndex="0"/>
                 <gridItem id="FWUP_CFG_COMMUNICATION_FUNCTION" selectedIndex="0"/>
                 <gridItem id="FWUP_CFG_BOOT_PROTECT_ENABLE" selectedIndex="0"/>
@@ -952,11 +957,6 @@
                 <gridItem id="FWUP_CFG_SERIAL_TERM_SCI_BITRATE" selectedIndex="115200"/>
                 <gridItem id="FWUP_CFG_SERIAL_TERM_SCI_INTERRUPT_PRIORITY" selectedIndex="15"/>
             </component>
-            <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
-            <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
-        </configuration>
-        <configuration inuse="true" name="r_sys_time_rx">
-            <component description="Dependency : r_bsp version(s) 5.20&#10;Dependency : r_cmt_rx version(s) 4.00&#10;Generic system timer for RX MCUs using CMT module." detailDescription="Generic system timer for RX MCUs using CMT module." display="r_sys_time_rx" id="r_sys_time_rx1.01" version="1.01"/>
             <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
             <source description="Components supporting Firmware Integration Technology" display="Firmware Integration Technology" id="com.renesas.smc.tools.swcomponent.fit.source"/>
         </configuration>

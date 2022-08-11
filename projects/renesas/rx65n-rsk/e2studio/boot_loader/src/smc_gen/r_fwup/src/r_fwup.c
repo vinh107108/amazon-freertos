@@ -29,6 +29,8 @@
  *           25.03.2022 1.04    Change the supported FreeRTOS version
  *                              Select data area from DF/CF
  *                              Added support for RX140-256KB
+ *           31.05.2022 1.05    Added support for Azure ADU
+ *                              Added support for RX660
  *********************************************************************************************************************/
 
 /* C Runtime includes. */
@@ -116,16 +118,16 @@ bool g_is_opened = false;
 OtaPalStatus_t R_FWUP_CreateFileForRx( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_Abort( OtaFileContext_t * const pFileContext );
 int16_t R_FWUP_WriteBlock( OtaFileContext_t * const pFileContext,
-                           uint32_t ulOffset,
-                           uint8_t * const pData,
-                           uint32_t ulBlockSize );
+                            uint32_t ulOffset,
+                            uint8_t * const pData,
+                            uint32_t ulBlockSize );
 OtaPalStatus_t R_FWUP_CloseFile( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_CheckFileSignature( OtaFileContext_t * const pFileContext );
 uint8_t * R_FWUP_ReadAndAssumeCertificate( const uint8_t * const pucCertName, uint32_t * const ulSignerCertSize );
 OtaPalStatus_t R_FWUP_ResetDevice( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_ActivateNewImage( OtaFileContext_t * const pFileContext );
 OtaPalStatus_t R_FWUP_SetPlatformImageState( OtaFileContext_t * const pFileContext,
-                                             OtaImageState_t eState );
+                                            OtaImageState_t eState );
 OtaPalImageState_t R_FWUP_GetPlatformImageState( OtaFileContext_t * const pFileContext );
 int32_t fwup_verification_sha256_ecdsa (const uint8_t * pucData, uint32_t ulSize,
                                             const uint8_t * pucSignature, uint32_t ulSignatureSize);
@@ -133,17 +135,29 @@ int32_t fwup_verification_sha256_ecdsa (const uint8_t * pucData, uint32_t ulSize
 static flash_err_t ota_flashing_task( uint8_t * block, uint32_t ulOffset, uint32_t length );
 static int32_t ota_context_validate( OtaFileContext_t * pFileContext );
 static void ota_context_close( OtaFileContext_t * pFileContext );
+#if (FLASH_CFG_CODE_FLASH_BGO == 1)
 static void ota_flashing_callback( void *event );
 static void ota_header_flashing_callback( void *event );
+#endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
+#if (FWUP_CFG_LOG_LEVEL > LOG_NONE)
 static int s_vsnprintf_safe (int8_t * s, size_t n, const int8_t * format, va_list arg);
 static int s_snprintf_safe (int8_t * s,size_t n, const int8_t * format, ...);
 static void s_log_printf_common (uint8_t usLoggingLevel, const int8_t * pcFormat, va_list args);
+#endif /* FWUP_CFG_LOG_LEVEL > LOG_NONE */
+#if (FWUP_CFG_LOG_LEVEL >= LOG_ERROR)
 static void s_log_printf_error (const int8_t * pcFormat, ...);
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_ERROR */
+#if (FWUP_CFG_LOG_LEVEL >= LOG_WARN)
 static void s_log_printf_warn (const int8_t * pcFormat, ...);
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_WARN */
+#if (FWUP_CFG_LOG_LEVEL >= LOG_INFO)
 static void s_log_printf_info (const int8_t * pcFormat, ...);
 static void s_log_printf_info_nolf (const int8_t * pcFormat, ...);
 static void s_log_printf_info_continue (const int8_t * pcFormat, ...);
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_INFO */
+#if (FWUP_CFG_LOG_LEVEL >= LOG_DEBUG)
 static void s_log_printf_debug (const int8_t * pcFormat, ...);
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_DEBUG */
 #elif (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_AFRTOS)
 static void ota_flashing_task (void * pvParameters);
 static CK_RV prvGetCertificateHandle (CK_FUNCTION_LIST_PTR pxFunctionList,
@@ -156,8 +170,10 @@ static CK_RV prvGetCertificate (const char * pcLabelName,
 static int32_t ota_context_validate (OtaFileContext_t * pFileContext);
 static int32_t ota_context_update_user_firmware_header (OtaFileContext_t * pFileContext);
 static void ota_context_close (OtaFileContext_t * pFileContext);
+#if (FLASH_CFG_CODE_FLASH_BGO == 1)
 static void ota_flashing_callback (void * event);
 static void ota_header_flashing_callback (void * event);
+#endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
 #else
     /* Fix me for other OS environment */
 #endif /* FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_NONEOS */
@@ -195,7 +211,9 @@ static volatile uint32_t gs_header_flashing_task;
 #elif (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_NONEOS)
     /* Fix me for other OS environment */
 static volatile st_load_fw_control_block_t s_load_fw_control_block;
+#if (FLASH_CFG_CODE_FLASH_BGO == 1)
 static volatile uint32_t gs_header_flashing_task;
+#endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
 #endif /* FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_AFRTOS */
 
 #if (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_BOOTLOADER)
@@ -240,11 +258,11 @@ static st_state_monitoring_t s_state_transit;
  */
 fwup_err_t R_FWUP_Open(void)
 {
-    fwup_err_t ret = FWUP_SUCCESS;
-    e_comm_err_t comm_api_error_code = COMM_SUCCESS;
+    fwup_err_t               ret                             = FWUP_SUCCESS;
+    e_comm_err_t             comm_api_error_code             = COMM_SUCCESS;
     e_state_monitoring_err_t state_monitoring_api_error_code = MONI_SUCCESS;
 #if (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_BOOTLOADER)
-    flash_err_t flash_api_error_code = FLASH_SUCCESS;
+    flash_err_t              flash_api_error_code            = FLASH_SUCCESS;
 #elif (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_NONEOS)
     OtaPalStatus_t ota_error_code;
 #endif  /* FWUP_CFG_IMPLEMENTATION_ENVIRONMENT */
@@ -257,6 +275,7 @@ fwup_err_t R_FWUP_Open(void)
 
     /* Initialization of Communication module. */
     comm_api_error_code = fwup_communication_open();
+
     if (COMM_SUCCESS != comm_api_error_code)
     {
         return FWUP_ERR_COMM;
@@ -264,6 +283,7 @@ fwup_err_t R_FWUP_Open(void)
 
     /* Set up the configuration of System-timer for check the status transition. */
     state_monitoring_api_error_code = fwup_state_monitoring_open();
+
     if (MONI_SUCCESS != state_monitoring_api_error_code)
     {
         comm_api_error_code = fwup_communication_close();  // Closing the Communication module.
@@ -273,6 +293,7 @@ fwup_err_t R_FWUP_Open(void)
 #if (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_BOOTLOADER)
     /* Initialization of Flash module. */
     flash_api_error_code = fwup_flash_open();
+
     if (FLASH_SUCCESS != flash_api_error_code)
     {
         comm_api_error_code             = fwup_communication_close();       // Closing the Communication module.
@@ -378,7 +399,10 @@ fwup_err_t R_FWUP_Operation(void)
 {
     fwup_err_t ret = FWUP_IN_PROGRESS;
     e_state_monitoring_err_t state_monitoring_api_error_code = MONI_SUCCESS;
+#if (FLASH_CFG_CODE_FLASH_BGO == 1)
     flash_interrupt_config_t cb_func_info;
+#endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
+
     uint8_t firm_data[FWUP_WRITE_BLOCK_SIZE];
     int32_t i_bytes_written;
     bool write_flag = false;
@@ -434,7 +458,7 @@ fwup_err_t R_FWUP_Operation(void)
 #if (FLASH_CFG_CODE_FLASH_BGO == 1)
                 while (OTA_FLASHING_IN_PROGRESS == gs_header_flashing_task)
                 {
-                    ;
+                    R_BSP_NOP();
                 }
 #endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
                 fwup_flash_close();
@@ -455,6 +479,7 @@ fwup_err_t R_FWUP_Operation(void)
         }
         else
         {
+            LogWarn( ( "Problems starting status monitoring." ) );
             return FWUP_ERR_STATE_MONITORING;
         }
     }
@@ -496,7 +521,9 @@ fwup_err_t R_FWUP_Operation(void)
             if (true == write_flag)
             {
                 uint32_t u_offset;
+
                 fwup_update_status(FWUP_STATE_FLASH_WRITE_WAIT);
+
                 u_offset        = s_load_fw_control_block.total_image_length;
                 i_bytes_written = R_FWUP_WriteBlock(&s_file_context, s_load_fw_control_block.total_image_length,
                                                     firm_data, FWUP_WRITE_BLOCK_SIZE);
@@ -507,9 +534,9 @@ fwup_err_t R_FWUP_Operation(void)
                 }
                 else
                 {
-                	LogInfoNoLF(("Flash Write: Address = 0x%X, length = %dbyte ... ",
-                	        ((uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS + u_offset),
-                	        FWUP_WRITE_BLOCK_SIZE));
+                    LogInfoNoLF(("Flash Write: Address = 0x%X, length = %dbyte ... ",
+                            ((uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS + u_offset),
+                            FWUP_WRITE_BLOCK_SIZE));
 #if (FLASH_CFG_DATA_FLASH_BGO == 0)
                     fwup_update_status(FWUP_STATE_FLASH_WRITE_COMPLETE);
 #endif  /* (FLASH_CFG_DATA_FLASH_BGO == 0) */
@@ -620,7 +647,7 @@ fwup_err_t R_FWUP_SetEndOfLife(void)
         {
             while (OTA_FLASHING_IN_PROGRESS == gs_header_flashing_task)
             {
-                ;
+                R_BSP_NOP();
             }
             LogInfo(("erase install area (code flash):OK"));
         }
@@ -658,9 +685,10 @@ fwup_err_t R_FWUP_SetEndOfLife(void)
 #if (FLASH_CFG_DATA_FLASH_BGO == 1)
         /* Write new image_flag and new signature to Header. */
         gs_header_flashing_task = OTA_FLASHING_IN_PROGRESS;
-        flash_err               = fwup_flash_write((uint32_t)block,
-                                    (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS,
-                                    length);
+
+        flash_err = fwup_flash_write((uint32_t)block,
+                            (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS,
+                            length);
 
         if (FLASH_SUCCESS != flash_err)
         {
@@ -677,7 +705,10 @@ fwup_err_t R_FWUP_SetEndOfLife(void)
         }
 #else
         /* Write new image_flag and new signature to Header. */
-        flash_err = fwup_flash_write((uint32_t)block, (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS, length);
+        flash_err = fwup_flash_write((uint32_t)block,
+                            (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS,
+                            length);
+
         if(FLASH_SUCCESS != flash_err)
         {
             ret = FWUP_ERR_FLASH;
@@ -742,12 +773,12 @@ OtaPalStatus_t R_FWUP_CreateFileForRx( OtaFileContext_t * const pFileContext )
 #elif (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_AFRTOS)
         flash_interrupt_config_t cb_func_info;
 
-        if( pFileContext->pFilePath != NULL )
+        if( NULL != pFileContext->pFilePath )
         {
             /* create task/queue/semaphore for flashing */
             xQueue = xQueueCreate( otaconfigMAX_NUM_BLOCKS_REQUEST, sizeof( st_packet_block_for_queue_t ) );
             xTaskCreate( ota_flashing_task, "OTA_FLASHING_TASK",
-                         configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES, &xTask );
+                        configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES, &xTask );
             xSemaphoreFlashig = xSemaphoreCreateBinary();
             xSemaphoreGive( xSemaphoreFlashig );
             xSemaphoreWriteBlock = xSemaphoreCreateMutex();
@@ -761,6 +792,7 @@ OtaPalStatus_t R_FWUP_CreateFileForRx( OtaFileContext_t * const pFileContext )
                 cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
                 fwup_flash_set_callback((void *)&cb_func_info);
                 gs_header_flashing_task = OTA_FLASHING_IN_PROGRESS;
+
                 if (fwup_flash_erase((flash_block_address_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_ERASE_ADDRESS,
                                     BOOT_LOADER_UPDATE_TARGET_BLOCK_NUMBER) != FLASH_SUCCESS)
                 {
@@ -914,14 +946,14 @@ int16_t R_FWUP_WriteBlock( OtaFileContext_t * const pFileContext,
         fragmented_flash_block_list = fragmented_flash_block_list_insert( fragmented_flash_block_list,
                                                                             ulOffset, pData, ulBlockSize );
 
-        if( fragmented_flash_block_list != NULL )
+        if( NULL != fragmented_flash_block_list )
         {
             while( 1 )
             {
                 fragmented_flash_block_list = fragmented_flash_block_list_assemble( fragmented_flash_block_list,
                                                                                     &flash_block );
 
-                if( flash_block.p_binary != NULL )
+                if( NULL != flash_block.p_binary )
                 {
                     fwup_update_status(FWUP_STATE_FLASH_WRITE_WAIT);   /* Update the firmware update status */
                     packet_buffer = pvPortMalloc( flash_block.length );
@@ -1119,7 +1151,7 @@ OtaPalStatus_t R_FWUP_CheckFileSignature( OtaFileContext_t * const pFileContext 
     flash_err_t flash_err;
     flash_interrupt_config_t cb_func_info;
 
-    if ( fragmented_flash_block_list != NULL )
+    if ( NULL != fragmented_flash_block_list )
     {
         st_fragmented_block_list_t *tmp = fragmented_flash_block_list;
         do
@@ -1139,21 +1171,24 @@ OtaPalStatus_t R_FWUP_CheckFileSignature( OtaFileContext_t * const pFileContext 
             cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
             fwup_flash_set_callback((void *)&cb_func_info);
             gs_header_flashing_task = OTA_FLASHING_IN_PROGRESS;
+
             flash_err = fwup_flash_write( ( uint32_t )assembled_flash_buffer,
                                         ( uint32_t )flash_aligned_address, FLASH_CF_MIN_PGM_SIZE);
+
             if( flash_err != FLASH_SUCCESS )
             {
                 R_BSP_NOP();  /* When an error occurs, consider an error notification method according to the system. */
             }
             while( OTA_FLASHING_IN_PROGRESS == gs_header_flashing_task )
             {
+            	R_BSP_NOP();
             }
 
             xSemaphoreGive( xSemaphoreFlashig );
             s_load_fw_control_block.total_image_length += tmp->content.length;
             tmp = fragmented_flash_block_list_delete( tmp, tmp->content.offset );
         }
-        while( tmp != NULL );
+        while( NULL != tmp );
     }
 
     /* Verify an ECDSA-SHA256 signature. */
@@ -1168,7 +1203,7 @@ OtaPalStatus_t R_FWUP_CheckFileSignature( OtaFileContext_t * const pFileContext 
                     OTA_JsonFileSignatureKey, ( const char * ) pFileContext->pCertFilepath ) );
         pucSignerCert = R_FWUP_ReadAndAssumeCertificate( pFileContext->pCertFilepath, &ulSignerCertSize );
 
-        if( pucSignerCert == NULL )
+        if( NULL == pucSignerCert )
         {
             eResult = OtaPalBadSignerCert;
         }
@@ -1180,7 +1215,8 @@ OtaPalStatus_t R_FWUP_CheckFileSignature( OtaFileContext_t * const pFileContext 
                                                 s_load_fw_control_block.total_image_length );
 
             if( CRYPTO_SignatureVerificationFinal( pvSigVerifyContext, ( char * ) pucSignerCert, ulSignerCertSize,
-                                                    pFileContext->pSignature->data, pFileContext->pSignature->size ) == pdFALSE )
+                                                    pFileContext->pSignature->data,
+                                                    pFileContext->pSignature->size ) == pdFALSE )
             {
                 LogError( ( "Finished %s signature verification, but signature verification failed",
                             OTA_JsonFileSignatureKey ) );
@@ -1196,7 +1232,7 @@ OtaPalStatus_t R_FWUP_CheckFileSignature( OtaFileContext_t * const pFileContext 
     }
 
     /* Free the signer certificate that we now own after R_FWUP_ReadAndAssumeCertificate(). */
-    if( pucSignerCert != NULL )
+    if( NULL != pucSignerCert )
     {
         vPortFree( pucSignerCert );
     }
@@ -1217,14 +1253,14 @@ uint8_t * R_FWUP_ReadAndAssumeCertificate( const uint8_t * const pucCertName,
 
     xResult = prvGetCertificate( ( const char * ) pucCertName, &pucSignerCert, ulSignerCertSize );
 
-    if( ( xResult == CKR_OK ) && ( pucSignerCert != NULL ) )
+    if( ( CKR_OK == xResult ) && ( NULL != pucSignerCert ) )
     {
         LogInfo( ( "R_FWUP_ReadAndAssumeCertificate using cert with label: %s", ( const char * ) pucCertName ) );
     }
     else
     {
         LogWarn( ( "No such certificate file: %s. Using certificate defined by the otapalconfigCODE_SIGNING_CERTIFICATE macro instead",
-                   ( const char * ) pucCertName ) );
+                    ( const char * ) pucCertName ) );
 
         /* Allocate memory for the signer certificate plus a terminating
            zero so we can copy it and return to the caller. */
@@ -1236,7 +1272,7 @@ uint8_t * R_FWUP_ReadAndAssumeCertificate( const uint8_t * const pucCertName,
         /*lint !e9005 we don't modify the cert but it could be set by PKCS11 so it's not const. */
         pucCertData = ( uint8_t * ) otapalconfigCODE_SIGNING_CERTIFICATE;
 
-        if( pucSignerCert != NULL )
+        if( NULL != pucSignerCert )
         {
             memcpy( pucSignerCert, pucCertData, ulCertSize );
             /* The crypto code requires the terminating zero to be part of the length so add 1 to the size. */
@@ -1351,9 +1387,11 @@ OtaPalStatus_t R_FWUP_ActivateNewImage( OtaFileContext_t * const pFileContext )
 /*-----------------------------------------------------------*/
 
 OtaPalStatus_t R_FWUP_SetPlatformImageState( OtaFileContext_t * const pFileContext,
-                                             OtaImageState_t eState )
+                                            OtaImageState_t eState )
 {
+#if (FLASH_CFG_CODE_FLASH_BGO == 1)
     flash_interrupt_config_t cb_func_info;
+#endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
 
     LogDebug( ( "R_FWUP_SetPlatformImageState is called." ) );
 
@@ -1373,12 +1411,14 @@ OtaPalStatus_t R_FWUP_SetPlatformImageState( OtaFileContext_t * const pFileConte
                 fwup_flash_set_callback((void *)&cb_func_info);
                 gs_header_flashing_task = OTA_FLASHING_IN_PROGRESS;
 #endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
+
                 if (fwup_flash_erase((flash_block_address_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_ERASE_ADDRESS,
                                     BOOT_LOADER_UPDATE_TARGET_BLOCK_NUMBER) == FLASH_SUCCESS)
                 {
 #if (FLASH_CFG_CODE_FLASH_BGO == 1)
                     while (OTA_FLASHING_IN_PROGRESS == gs_header_flashing_task)
                     {
+                    	R_BSP_NOP();
                     }
 #endif /* FLASH_CFG_CODE_FLASH_BGO == 1 */
                     LogInfo( ( "Erase install area (code flash):OK" ) );
@@ -1576,7 +1616,7 @@ static CK_RV prvGetCertificate( const char * pcLabelName,
             pucCert = pvPortMalloc( xTemplate.ulValueLen );
         }
 
-        if( ( xResult == CKR_OK ) && ( pucCert == NULL ) )
+        if( ( NULL == pucCert ) && ( CKR_OK == xResult ) )
         {
             xResult = CKR_HOST_MEMORY;
         }
@@ -1687,12 +1727,17 @@ static int32_t ota_context_update_user_firmware_header( OtaFileContext_t * pFile
     {
         fwup_flash_close();
         fwup_flash_open();
-        cb_func_info.pcallback = ota_header_flashing_callback;
+
+        cb_func_info.pcallback    = ota_header_flashing_callback;
         cb_func_info.int_priority = FLASH_INTERRUPT_PRIORITY;
+
         fwup_flash_set_callback((void *)&cb_func_info);
+
         gs_header_flashing_task = OTA_FLASHING_IN_PROGRESS;
-        length = BOOT_LOADER_USER_FIRMWARE_HEADER_LENGTH;
-        flash_err = fwup_flash_write( ( uint32_t ) block, ( uint32_t ) BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS, length);
+        length                  = BOOT_LOADER_USER_FIRMWARE_HEADER_LENGTH;
+
+        flash_err = fwup_flash_write( ( uint32_t ) block,
+                                        ( uint32_t ) BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS, length);
 
         if(flash_err != FLASH_SUCCESS)
         {
@@ -1700,6 +1745,7 @@ static int32_t ota_context_update_user_firmware_header( OtaFileContext_t * pFile
         }
         while( OTA_FLASHING_IN_PROGRESS == gs_header_flashing_task )
         {
+        	R_BSP_NOP();
         }
     }
 
@@ -1719,16 +1765,16 @@ static void ota_context_close( OtaFileContext_t * pFileContext )
 
 #if (FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_AFRTOS)
 static st_fragmented_block_list_t * fragmented_flash_block_list_insert( st_fragmented_block_list_t * head,
-                                                                         uint32_t offset,
-                                                                         uint8_t * binary,
-                                                                         uint32_t length )
+                                                                        uint32_t offset,
+                                                                        uint8_t * binary,
+                                                                        uint32_t length )
 {
     st_fragmented_block_list_t *tmp, *current, *previous, *new;
 
-    new = pvPortMalloc( sizeof( st_flash_block_t ) );
+    new = pvPortMalloc( sizeof( st_fragmented_block_list_t ) );
     new->content.p_binary = pvPortMalloc( length );
 
-    if( ( new != NULL ) && ( new->content.p_binary != NULL ) )
+    if( ( NULL != new ) && ( NULL != new->content.p_binary ) )
     {
         memcpy( new->content.p_binary, binary, length );
         new->content.offset = offset;
@@ -1736,7 +1782,7 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_insert( st_fragm
         new->next = NULL;
 
         /* new head would be returned when head would be specified as NULL. */
-        if( head == NULL )
+        if( NULL == head )
         {
             tmp = new;
         }
@@ -1747,7 +1793,12 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_insert( st_fragm
 
             while( 1 )
             {
-                if( ( new->content.offset < current->content.offset ) || ( current == NULL ) )
+                if( NULL == current )
+                {
+                    break;
+                }
+
+                if( new->content.offset < current->content.offset )
                 {
                     break;
                 }
@@ -1778,11 +1829,11 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_insert( st_fragm
 }
 
 static st_fragmented_block_list_t * fragmented_flash_block_list_delete( st_fragmented_block_list_t * head,
-                                                                         uint32_t offset )
+                                                                        uint32_t offset )
 {
     st_fragmented_block_list_t *tmp = head, *previous = NULL;
 
-    if( head != NULL )
+    if( NULL != head )
     {
         while( 1 )
         {
@@ -1791,7 +1842,7 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_delete( st_fragm
                 break;
             }
 
-            if( tmp->next == NULL )
+            if( NULL == tmp->next )
             {
                 tmp = NULL;
                 break;
@@ -1801,10 +1852,10 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_delete( st_fragm
             tmp = tmp->next;
         }
 
-        if( tmp != NULL )
+        if( NULL != tmp )
         {
             /* delete target exists on not head, remove specified and return head in this case */
-            if( previous != NULL )
+            if( NULL != previous )
             {
                 previous->next = tmp->next;
                 vPortFree( tmp->content.p_binary );
@@ -1815,7 +1866,7 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_delete( st_fragm
             {
                 /* delete target exists on head with subsequent data,
                    remove head and return specified (as new head) in this case */
-                if( head->next != NULL )
+                if( NULL != head->next )
                 {
                     tmp = head->next;
                 }
@@ -1843,7 +1894,7 @@ static st_fragmented_block_list_t *fragmented_flash_block_list_print(st_fragment
     total_heap_length = 0;
     total_list_count = 0;
 
-    if( head != NULL )
+    if( NULL != head )
     {
         while( 1 )
         {
@@ -1851,7 +1902,7 @@ static st_fragmented_block_list_t *fragmented_flash_block_list_print(st_fragment
             total_heap_length += tmp->content.length;
             total_list_count++;
 
-            if( tmp->next == NULL )
+            if( NULL == tmp->next )
             {
                 break;
             }
@@ -1860,13 +1911,14 @@ static st_fragmented_block_list_t *fragmented_flash_block_list_print(st_fragment
         }
     }
 
-    LogDebug( ( "FRAGMENTED_FLASH_BLOCK_LIST: total_heap_length = [%d], total_list_count = [%d].", total_heap_length, total_list_count ) );
+    LogDebug( ( "FRAGMENTED_FLASH_BLOCK_LIST: total_heap_length = [%d], total_list_count = [%d].",
+                total_heap_length, total_list_count ) );
 
     return tmp;
 }
 
 static st_fragmented_block_list_t * fragmented_flash_block_list_assemble(st_fragmented_block_list_t * head,
-                                                                         st_flash_block_t * flash_block)
+                                                                        st_flash_block_t * flash_block)
 {
     st_fragmented_block_list_t *tmp = head;
     st_fragmented_block_list_t *flash_block_candidate[FLASH_CF_MIN_PGM_SIZE];
@@ -1885,7 +1937,7 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_assemble(st_frag
             loop_counter = 0;
             while( 1 )
             {
-                if ( ( tmp != NULL ) && ( assembled_length < FLASH_CF_MIN_PGM_SIZE ) )
+                if ( ( NULL != tmp ) && ( assembled_length < FLASH_CF_MIN_PGM_SIZE ) )
                 {
                     if( loop_counter < FLASH_CF_MIN_PGM_SIZE )
                     {
@@ -1921,7 +1973,7 @@ static st_fragmented_block_list_t * fragmented_flash_block_list_assemble(st_frag
         }
 
         /* break if found completed flash_block_candidate or found end of list */
-        if( ( assembled_length == FLASH_CF_MIN_PGM_SIZE ) || ( tmp == NULL ) )
+        if( ( FLASH_CF_MIN_PGM_SIZE == assembled_length ) || ( NULL == tmp ) )
         {
             break;
         }
@@ -1966,9 +2018,11 @@ static flash_err_t ota_flashing_task(uint8_t *p_packet, uint32_t ulOffset, uint3
     static uint8_t s_block[FWUP_WRITE_BLOCK_SIZE];
 
     memcpy(s_block, p_packet, length);
+
     flash_err = fwup_flash_write((uint32_t)s_block,
-                                    (uint32_t)(ulOffset + (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS),
-                                    length);
+                            (uint32_t)(ulOffset + (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS),
+                            length);
+
     if (FWUP_WRITE_BLOCK_SIZE != length)
     {
         R_BSP_NOP();
@@ -1994,11 +2048,14 @@ static void ota_flashing_task( void * pvParameters )
         xQueueReceive( xQueue, &packet_block_for_queue2, portMAX_DELAY );
         xSemaphoreTake( xSemaphoreFlashig, portMAX_DELAY );
         memcpy( block, packet_block_for_queue2.p_packet, packet_block_for_queue2.length );
+
         ulOffset = packet_block_for_queue2.ulOffset;
-        length = packet_block_for_queue2.length;
+        length   = packet_block_for_queue2.length;
+
         flash_err = fwup_flash_write( ( uint32_t ) block, ( ulOffset +
                                     ( uint32_t ) BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS +
                                     ( uint32_t ) BOOT_LOADER_USER_FIRMWARE_HEADER_LENGTH ), length );
+
         if( packet_block_for_queue2.length != 1024 )
         {
             R_BSP_NOP();
@@ -2012,13 +2069,13 @@ static void ota_flashing_task( void * pvParameters )
         vPortFree(packet_block_for_queue2.p_packet);
     }
 }
-#else
+#else /* FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_NONEOS */
     /* Fix me for other OS environment */
 #endif /* FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_NONEOS */
 
+#if (FLASH_CFG_CODE_FLASH_BGO == 1)
 static void ota_flashing_callback( void *event )
 {
-#if (FLASH_CFG_CODE_FLASH_BGO == 1)
     flash_int_cb_args_t * p_event = event;
 
     if ( ( FLASH_INT_EVENT_WRITE_COMPLETE != p_event->event ) ||
@@ -2037,12 +2094,10 @@ static void ota_flashing_callback( void *event )
 #else
     /* Fix me for other OS environment */
 #endif /* FWUP_CFG_IMPLEMENTATION_ENVIRONMENT == FWUP_IMPLEMENTATION_AFRTOS */
-#endif /* FLASH_CFG_CODE_FLASH_BGO */
 }
 
 static void ota_header_flashing_callback( void *event )
 {
-#if (FLASH_CFG_CODE_FLASH_BGO == 1)
     flash_int_cb_args_t * p_event = event;
 
     gs_header_flashing_task = OTA_FLASHING_COMPLETE;
@@ -2052,8 +2107,8 @@ static void ota_header_flashing_callback( void *event )
     {
         R_BSP_NOP(); /* trap */
     }
-#endif /* FLASH_CFG_CODE_FLASH_BGO */
 }
+#endif /* FLASH_CFG_CODE_FLASH_BGO */
 #endif  /* FWUP_CFG_IMPLEMENTATION_ENVIRONMENT != FWUP_IMPLEMENTATION_BOOTLOADER */
 
 /***********************************************************************************************************************
@@ -2386,8 +2441,8 @@ e_comm_err_t fwup_communication_open(void)
 #endif /* FWUP_IMPLEMENTATION_BOOTLOADER */
 
     /* If there were an error this would demonstrate error detection of API calls. */
-    if (SCI_SUCCESS != my_sci_err &&
-        SCI_ERR_CH_NOT_CLOSED != my_sci_err)
+    if ((SCI_SUCCESS           != my_sci_err) &&
+        (SCI_ERR_CH_NOT_CLOSED != my_sci_err))
     {
         R_BSP_NOP(); // Your error handling code would go here.
         ret = COMM_ERROR;
@@ -2578,8 +2633,9 @@ e_state_monitoring_err_t fwup_state_monitoring_open(void)
     sys_time_err_t sys_time_api_error_code;
 
     sys_time_api_error_code = R_SYS_TIME_Open();
-    if (SYS_TIME_SUCCESS != sys_time_api_error_code &&
-        SYS_TIME_ERR_ALREADY_STARTED != sys_time_api_error_code)
+
+    if ((SYS_TIME_SUCCESS             != sys_time_api_error_code) &&
+        (SYS_TIME_ERR_ALREADY_STARTED != sys_time_api_error_code))
     {
         ret = MONI_ERROR;
     }
@@ -2646,6 +2702,7 @@ e_state_monitoring_err_t fwup_state_monitoring_stop(void)
     if (true == R_SYS_TIME_IsPeriodicCallbackRegistered(fwup_state_monitoring_callback))
     {
         sys_time_api_error_code = R_SYS_TIME_UnregisterPeriodicCallback(fwup_state_monitoring_callback);
+
         if (SYS_TIME_SUCCESS != sys_time_api_error_code)
         {
             ret = MONI_ERROR;
@@ -2676,8 +2733,9 @@ e_state_monitoring_err_t fwup_state_monitoring_close(void)
     sys_time_err_t sys_time_api_error_code;
 
     sys_time_api_error_code = R_SYS_TIME_Close();
-    if (SYS_TIME_SUCCESS != sys_time_api_error_code &&
-        SYS_TIME_ERR_NOT_STARTED != sys_time_api_error_code)
+
+    if ((SYS_TIME_SUCCESS         != sys_time_api_error_code) &&
+        (SYS_TIME_ERR_NOT_STARTED != sys_time_api_error_code))
     {
         ret = MONI_ERROR;
     }
@@ -2822,28 +2880,52 @@ static void fwup_software_delay_ms(uint32_t delay)
 bool fwup_get_boot_protect(void)
 {
     bool ret;
-#if (FLASH_TYPE == FLASH_TYPE_4) /* FLASH_TYPE_4 */
-    fawreg_t faw;
+#if (FLASH_TYPE == FLASH_TYPE_4 || FLASH_TYPE == FLASH_TYPE_1) /* FLASH_TYPE_4, 1 */
+    flash_access_window_config_t access_window;
+    flash_err_t                  err;
+    uint32_t                     saddr;
+    uint32_t                     eaddr;
 
-    faw.LONG = FLASH.FAWMON.LONG;
-    if (faw.BIT.FSPR == 1)
+    R_BSP_InterruptsDisable();
+    err = R_FLASH_Control(FLASH_CMD_ACCESSWINDOW_GET, &access_window);
+    R_BSP_InterruptsEnable();
+
+    if (FLASH_SUCCESS != err)
     {
+        R_BSP_NOP(); // Your error handling code would go here.
         ret = false;
     }
     else
     {
-        ret = true;
+#if (FWUP_FLASH_BANK_MODE == 0) /* Dual mode */
+        saddr = (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS;
+        eaddr = (uint32_t)BOOT_LOADER_MIRROR_LOW_ADDRESS;
+#else    /* Linear mode */
+        saddr = (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS;
+        eaddr = (uint32_t)BOOT_LOADER_LOW_ADDRESS;
+#endif  /* FWUP_FLASH_BANK_MODE */
+
+        if ((access_window.start_addr == saddr) &&
+            (access_window.end_addr   == eaddr))
+        {
+            ret = true;
+        }
+        else
+        {
+            ret = false;
+        }
     }
 #elif (FLASH_TYPE == FLASH_TYPE_3) /* FLASH_TYPE_3 */
-    flash_err_t err;
+    flash_err_t            err;
     flash_lockbit_config_t info;
 
     info.block_start_address = FLASH_CF_BLOCK_0;
-    info.num_blocks = BOOT_LOADER_MIRROR_BLOCK_NUMBER;
+    info.num_blocks          = BOOT_LOADER_MIRROR_BLOCK_NUMBER;
 
     R_BSP_InterruptsDisable();
     err = R_FLASH_Control(FLASH_CMD_LOCKBIT_READ, &info);
     R_BSP_InterruptsEnable();
+
     if (info.result == FLASH_RES_LOCKBIT_STATE_NON_PROTECTED)
     {
         ret = false;
@@ -2852,29 +2934,15 @@ bool fwup_get_boot_protect(void)
     {
         ret = true;
     }
+
     if (err != FLASH_SUCCESS)
     {
         R_BSP_NOP(); // Your error handling code would go here.
-    }
-#elif (FLASH_TYPE == FLASH_TYPE_1) /* FLASH_TYPE_1 */
-    flash_access_window_config_t access_window;
-
-    R_BSP_InterruptsDisable();
-    ret = R_FLASH_Control(FLASH_CMD_ACCESSWINDOW_GET, &access_window);
-    R_BSP_InterruptsEnable();
-
-    if (access_window.start_addr == (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS &&
-        access_window.end_addr == (uint32_t)BOOT_LOADER_LOW_ADDRESS)
-    {
-        ret = true;
-    }
-    else
-    {
         ret = false;
     }
 #else
     /* Fix me for other flash type */
-#endif  /* (FLASH_TYPE == FLASH_TYPE_4) */
+#endif  /* (FLASH_TYPE == FLASH_TYPE_4 || FLASH_TYPE == FLASH_TYPE_1) */
     return ret;
 }
 
@@ -2887,10 +2955,10 @@ flash_err_t fwup_set_boot_protect(void)
     /* Set access window */
 #if (FWUP_FLASH_BANK_MODE == 0) /* Dual mode */
     access_window.start_addr = (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS;
-    access_window.end_addr = (uint32_t)BOOT_LOADER_MIRROR_LOW_ADDRESS;
-#else    // Linear mode
+    access_window.end_addr   = (uint32_t)BOOT_LOADER_MIRROR_LOW_ADDRESS;
+#else    /* Linear mode */
     access_window.start_addr = (uint32_t)BOOT_LOADER_UPDATE_TEMPORARY_AREA_LOW_ADDRESS;
-    access_window.end_addr = (uint32_t)BOOT_LOADER_LOW_ADDRESS;
+    access_window.end_addr   = (uint32_t)BOOT_LOADER_LOW_ADDRESS;
 #endif  /* FWUP_FLASH_BANK_MODE */
 
     /* Set access window, Set FSPR bit for boot protection also */
@@ -2912,7 +2980,7 @@ flash_err_t fwup_set_boot_protect(void)
     ret = R_FLASH_Control(FLASH_CMD_LOCKBIT_ENABLE, NULL);
     R_BSP_InterruptsEnable();
 #else
-    /* Fix me for other protection scheme */
+    /* Fix me for other flash type */
 #endif  /* (FLASH_TYPE == FLASH_TYPE_4 || FLASH_TYPE == FLASH_TYPE_1) */
     return ret;
 }
@@ -3002,7 +3070,7 @@ int32_t fwup_verification_sha256_ecdsa(const uint8_t *pucData, uint32_t ulSize, 
  *                    Send data with SCI
  * Return Value : none
  **********************************************************************************************************************/
-void my_sw_charput_function(uint8_t data)
+void my_sw_charput_function (uint8_t data)
 {
     uint32_t arg = 0;
 
@@ -3012,7 +3080,7 @@ void my_sw_charput_function(uint8_t data)
 
         /* Casting void pointer is used for address. */
         R_SCI_Control(s_fwup_communication_handle, SCI_CMD_TX_Q_BYTES_FREE, (void*) &arg);
-    } while (SCI_CFG_CH8_TX_BUFSIZ != arg);
+    } while (SCI_CH_TX_BUFSIZ_serial_term != arg);
 
     /* Casting uint8_t pointer is used for address. */
     R_SCI_Send(s_fwup_communication_handle, (uint8_t*) &data, 1);
@@ -3044,6 +3112,7 @@ void my_sw_charget_function (void)
 
 /*-----------------------------------------------------------*/
 
+#if (FWUP_CFG_LOG_LEVEL > LOG_NONE)
 static int s_vsnprintf_safe(int8_t * s,
                             size_t n,
                             const int8_t * format,
@@ -3078,9 +3147,9 @@ static int s_vsnprintf_safe(int8_t * s,
 /*-----------------------------------------------------------*/
 
 static int s_snprintf_safe( int8_t * s,
-                          size_t n,
-                          const int8_t * format,
-                          ... )
+                            size_t n,
+                            const int8_t * format,
+                            ... )
 {
     int ret;
     va_list args;
@@ -3133,14 +3202,17 @@ static void s_log_printf_common(uint8_t usLoggingLevel,
         }
 
         /* Add the chosen log level information as prefix for the message. */
-        if( ( pcLevelString != NULL ) && ( xLength < configLOGGING_MAX_MESSAGE_LENGTH ) )
+        if( ( NULL != pcLevelString ) && ( xLength < configLOGGING_MAX_MESSAGE_LENGTH ) )
         {
-            xLength += s_snprintf_safe( pcPrintString + xLength, configLOGGING_MAX_MESSAGE_LENGTH - xLength, "[%s] ", pcLevelString );
+            xLength += s_snprintf_safe( pcPrintString + xLength,
+                                        configLOGGING_MAX_MESSAGE_LENGTH - xLength, "[%s] ",
+                                        pcLevelString );
         }
 
         if( xLength < configLOGGING_MAX_MESSAGE_LENGTH )
         {
-            xLength += s_vsnprintf_safe( pcPrintString + xLength, configLOGGING_MAX_MESSAGE_LENGTH - xLength, pcFormat, args );
+            xLength += s_vsnprintf_safe( pcPrintString + xLength,
+                    configLOGGING_MAX_MESSAGE_LENGTH - xLength, pcFormat, args );
         }
 
         /* Add newline characters if the message does not end with them.*/
@@ -3149,9 +3221,10 @@ static void s_log_printf_common(uint8_t usLoggingLevel,
         if( ( ulFormatLen >= 2 ) &&
             ( strncmp( (char *)(pcFormat + ulFormatLen), "\r\n", 2 ) != 0 ) &&
             ( xLength < configLOGGING_MAX_MESSAGE_LENGTH ) &&
-			( LOG_INFO_NOLF != usLoggingLevel) )
+            ( LOG_INFO_NOLF != usLoggingLevel) )
         {
-            xLength += s_snprintf_safe( (int8_t *)(pcPrintString + xLength), configLOGGING_MAX_MESSAGE_LENGTH - xLength, "%s", "\r\n" );
+            xLength += s_snprintf_safe( (int8_t *)(pcPrintString + xLength),
+                    configLOGGING_MAX_MESSAGE_LENGTH - xLength, "%s", "\r\n" );
         }
 
         pcPrintString[xLength] = '\0';
@@ -3164,11 +3237,13 @@ static void s_log_printf_common(uint8_t usLoggingLevel,
         }
     }
 }
+#endif /* FWUP_CFG_LOG_LEVEL > LOG_NONE */
 
 /*-----------------------------------------------------------*/
 
+#if (FWUP_CFG_LOG_LEVEL >= LOG_ERROR)
 static void s_log_printf_error(const int8_t * pcFormat,
-                          ...)
+                                ...)
 {
     va_list args;
 
@@ -3177,11 +3252,13 @@ static void s_log_printf_error(const int8_t * pcFormat,
 
     va_end (args);
 }
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_ERROR */
 
 /*-----------------------------------------------------------*/
 
+#if (FWUP_CFG_LOG_LEVEL >= LOG_WARN)
 static void s_log_printf_warn(const int8_t * pcFormat,
-                         ...)
+                            ...)
 {
     va_list args;
 
@@ -3190,11 +3267,13 @@ static void s_log_printf_warn(const int8_t * pcFormat,
 
     va_end (args);
 }
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_WARN */
 
 /*-----------------------------------------------------------*/
 
+#if (FWUP_CFG_LOG_LEVEL >= LOG_INFO)
 static void s_log_printf_info(const int8_t * pcFormat,
-                         ...)
+                            ...)
 {
     va_list args;
 
@@ -3207,7 +3286,7 @@ static void s_log_printf_info(const int8_t * pcFormat,
 /*-----------------------------------------------------------*/
 
 static void s_log_printf_info_nolf(const int8_t * pcFormat,
-                         ...)
+                            ...)
 {
     va_list args;
 
@@ -3220,7 +3299,7 @@ static void s_log_printf_info_nolf(const int8_t * pcFormat,
 /*-----------------------------------------------------------*/
 
 static void s_log_printf_info_continue(const int8_t * pcFormat,
-                         ...)
+                            ...)
 {
     va_list args;
 
@@ -3229,11 +3308,13 @@ static void s_log_printf_info_continue(const int8_t * pcFormat,
 
     va_end (args);
 }
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_INFO */
 
 /*-----------------------------------------------------------*/
 
+#if (FWUP_CFG_LOG_LEVEL >= LOG_DEBUG)
 static void s_log_printf_debug(const int8_t * pcFormat,
-                          ...)
+                                ...)
 {
     va_list args;
 
@@ -3242,6 +3323,7 @@ static void s_log_printf_debug(const int8_t * pcFormat,
 
     va_end (args);
 }
+#endif /* FWUP_CFG_LOG_LEVEL >= LOG_DEBUG */
 
 /*-----------------------------------------------------------*/
 
