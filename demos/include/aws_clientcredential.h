@@ -1,5 +1,5 @@
 /*
- * FreeRTOS V202203.00
+ * FreeRTOS V202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,16 +26,12 @@
 #ifndef __AWS_CLIENTCREDENTIAL__H__
 #define __AWS_CLIENTCREDENTIAL__H__
 
-/* @TEST_ANCHOR */
-
 /*
  * @brief MQTT Broker endpoint.
  *
  * @todo Set this to the fully-qualified DNS name of your MQTT broker.
  */
-#ifndef clientcredentialMQTT_BROKER_ENDPOINT
-    #define clientcredentialMQTT_BROKER_ENDPOINT    ""
-#endif
+#define clientcredentialMQTT_BROKER_ENDPOINT         ""
 
 /*
  * @brief Host name.
@@ -47,40 +43,30 @@
  * by software, such as a production serial number, rather
  * than a hard coded constant.
  */
-#ifndef clientcredentialIOT_THING_NAME
-    #define clientcredentialIOT_THING_NAME    ""
-#endif
+#define clientcredentialIOT_THING_NAME               ""
 
 /*
  * @brief Port number the MQTT broker is using.
  */
-#ifndef clientcredentialMQTT_BROKER_PORT
-    #define clientcredentialMQTT_BROKER_PORT    8883
-#endif
+#define clientcredentialMQTT_BROKER_PORT             8883
 
 /*
  * @brief Port number the Green Grass Discovery use for JSON retrieval from cloud is using.
  */
-#ifndef clientcredentialGREENGRASS_DISCOVERY_PORT
-    #define clientcredentialGREENGRASS_DISCOVERY_PORT    8443
-#endif
+#define clientcredentialGREENGRASS_DISCOVERY_PORT    8443
 
 /*
  * @brief Wi-Fi network to join.
  *
  * @todo If you are using Wi-Fi, set this to your network name.
  */
-#ifndef clientcredentialWIFI_SSID
-    #define clientcredentialWIFI_SSID    ""
-#endif
+#define clientcredentialWIFI_SSID                    ""
 
 /*
  * @brief Password needed to join Wi-Fi network.
  * @todo If you are using WPA, set this to your network password.
  */
-#ifndef clientcredentialWIFI_PASSWORD
-    #define clientcredentialWIFI_PASSWORD    ""
-#endif
+#define clientcredentialWIFI_PASSWORD                ""
 
 /*
  * @brief Wi-Fi network security type.
@@ -90,8 +76,6 @@
  * @note Possible values are eWiFiSecurityOpen, eWiFiSecurityWEP, eWiFiSecurityWPA,
  * eWiFiSecurityWPA2 (depending on the support of your device Wi-Fi radio).
  */
-#ifndef clientcredentialWIFI_SECURITY
-    #define clientcredentialWIFI_SECURITY    eWiFiSecurityWPA2
-#endif
+#define clientcredentialWIFI_SECURITY                eWiFiSecurityWPA2
 
 #endif /* ifndef __AWS_CLIENTCREDENTIAL__H__ */
