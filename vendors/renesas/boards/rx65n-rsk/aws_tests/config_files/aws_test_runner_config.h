@@ -44,27 +44,27 @@
 
 /* Unsupported tests */
 #define testrunnerFULL_CBOR_ENABLED         testrunnerUNSUPPORTED
-#define testrunnerFULL_OTA_PAL_ENABLED      testrunnerUNSUPPORTED
-#define testrunnerFULL_WIFI_ENABLED         testrunnerUNSUPPORTED
+#define testrunnerFULL_OTA_PAL_ENABLED      0
+#define testrunnerFULL_WIFI_ENABLED         0
 
 /* Enable tests by setting defines to 1 */
 
 #define testrunnerFULL_MQTT_ALPN_ENABLED            0
 #define testrunnerFULL_CORE_MQTT_ENABLED            0
-#define testrunnerFULL_CORE_MQTT_AWS_IOT_ENABLED    0
+#define testrunnerFULL_CORE_MQTT_AWS_IOT_ENABLED    0 //vinh
 #define testrunnerFULL_CORE_HTTP_ENABLED            0
 #define testrunnerFULL_CORE_HTTP_AWS_IOT_ENABLED    0
-#define testrunnerFULL_PKCS11_ENABLED               0
+#define testrunnerFULL_PKCS11_ENABLED               0 //vinh
 #define testrunnerFULL_CRYPTO_ENABLED               0
 #define testrunnerFULL_MQTT_STRESS_TEST_ENABLED     0
 #define testrunnerFULL_MQTT_AGENT_ENABLED           0
-#define testrunnerFULL_TCP_ENABLED                  1
+#define testrunnerFULL_TCP_ENABLED                  0 //vinh
 #define testrunnerFULL_GGD_ENABLED                  0
 #define testrunnerFULL_GGD_HELPER_ENABLED           0
 #define testrunnerFULL_SHADOW_ENABLED               0
 #define testrunnerFULL_MQTTv4_ENABLED               0
 #define testrunnerFULL_MEMORYLEAK_ENABLED           0
-#define testrunnerFULL_TLS_ENABLED                  0
+#define testrunnerFULL_TLS_ENABLED                  1 //vinh
 #define testrunnerFULL_HTTPS_CLIENT_ENABLED         0
 #define testrunnerFULL_DEVICE_SHADOW_ENABLED        0
 

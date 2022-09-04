@@ -14,7 +14,7 @@ doxygen_warnings.txt
 *.bin
 *.pyc
 *.log
-
+*.rcpc
 RemoteSystemsTempFiles/*
 
 # Ignore top-level build dir

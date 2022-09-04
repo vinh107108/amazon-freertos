@@ -222,9 +222,9 @@ extern void vLoggingPrint( const char * pcMessage );
  * http://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_TCP/UDP_Echo_Clients.html. */
 #define configECHO_SERVER_ADDR0              192
 #define configECHO_SERVER_ADDR1              168
-#define configECHO_SERVER_ADDR2              1
-#define configECHO_SERVER_ADDR3              200
-#define configTCP_ECHO_CLIENT_PORT           9999
+#define configECHO_SERVER_ADDR2              0
+#define configECHO_SERVER_ADDR3              159
+#define configTCP_ECHO_CLIENT_PORT           8883
 
 /* Default MAC address configuration.  The demo creates a virtual network
  * connection that uses this MAC address by accessing the raw Ethernet/WiFi data
@@ -240,10 +240,10 @@ extern void vLoggingPrint( const char * pcMessage );
 
 /* Default IP address configuration.  Used in ipconfigUSE_DHCP is set to 0, or
  * ipconfigUSE_DHCP is set to 1 but a DNS server cannot be contacted. */
-#define configIP_ADDR0                       172
-#define configIP_ADDR1                       27
-#define configIP_ADDR2                       49
-#define configIP_ADDR3                       127
+#define configIP_ADDR0                       192
+#define configIP_ADDR1                       168
+#define configIP_ADDR2                       0
+#define configIP_ADDR3                       159
 
 /* Default gateway IP address configuration.  Used in ipconfigUSE_DHCP is set to
  * 0, or ipconfigUSE_DHCP is set to 1 but a DNS server cannot be contacted. */

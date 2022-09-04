@@ -31,14 +31,19 @@
  *
  * @todo Set this to the fully-qualified DNS name of your MQTT broker.
  */
-#define clientcredentialMQTT_BROKER_ENDPOINT         ""
+#define clientcredentialMQTT_BROKER_ENDPOINT         "a19vrxazx9ogvy-ats.iot.ap-southeast-1.amazonaws.com"
 
 /*
  * @brief Host name.
  *
  * @todo Set this to the unique name of your IoT Thing.
+ * Please note that for convenience of demonstration only we
+ * are using a #define here. In production scenarios the thing
+ * name can be something unique to the device that can be read
+ * by software, such as a production serial number, rather
+ * than a hard coded constant.
  */
-#define clientcredentialIOT_THING_NAME               ""
+#define clientcredentialIOT_THING_NAME               "VinhThing20201221"
 
 /*
  * @brief Port number the MQTT broker is using.
@@ -55,13 +60,13 @@
  *
  * @todo If you are using Wi-Fi, set this to your network name.
  */
-#define clientcredentialWIFI_SSID                    ""
+#define clientcredentialWIFI_SSID                    "Nha36"
 
 /*
  * @brief Password needed to join Wi-Fi network.
  * @todo If you are using WPA, set this to your network password.
  */
-#define clientcredentialWIFI_PASSWORD                ""
+#define clientcredentialWIFI_PASSWORD                "88888888"
 
 /*
  * @brief Wi-Fi network security type.
